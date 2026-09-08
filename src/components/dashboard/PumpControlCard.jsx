@@ -27,7 +27,7 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
         <div className="flex items-center justify-between">
           <div>
             <div className={`text-3xl font-bold ${isOn ? 'text-green-600' : 'text-slate-500'}`}>
-              {pumpStatus.toUpperCase()}
+              {(pumpStatus ?? 'off').toUpperCase()}
             </div>
             <div className="text-sm font-medium text-slate-500 mt-1">
               {isOn ? 'Running' : 'Stopped'}
@@ -43,7 +43,7 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
             }`}
           >
             {isManual ? <Radio className="w-3 h-3" /> : <Settings2 className="w-3 h-3" />}
-            {controlMode.toUpperCase()}
+            {(controlMode ?? 'auto').toUpperCase()}
           </button>
         </div>
 

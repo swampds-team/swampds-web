@@ -67,7 +67,7 @@ export default function SystemStatusBanner({ systemStatus }) {
         </div>
       </div>
       <div className={`self-start sm:self-center flex-shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide ${badgeBg}`}>
-        {systemStatus.toUpperCase()}
+        {(systemStatus ?? 'loading').toUpperCase()}
       </div>
     </div>
   );

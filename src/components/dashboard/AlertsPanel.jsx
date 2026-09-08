@@ -31,7 +31,7 @@ function AlertItem({ alert }) {
       </div>
       <div>
         <h4 className={`text-sm font-semibold ${labelClass}`}>
-          {alert.severity.toUpperCase()}
+          {(alert.severity ?? 'info').toUpperCase()}
         </h4>
         <p className="text-sm text-slate-600 mt-0.5 leading-snug">{alert.message}</p>
         <p className="text-xs text-slate-400 mt-1">{alert.time}</p>

@@ -20,7 +20,7 @@ function AlertRow({ alert }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
-            {alert.severity.toUpperCase()}
+            {(alert.severity ?? 'info').toUpperCase()}
           </span>
           <span className="text-xs text-slate-400 font-mono">{alert.time}</span>
         </div>
