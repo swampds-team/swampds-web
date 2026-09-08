@@ -3,6 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { Droplets, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
+/** Maps Firebase auth error codes to plain-language messages. */
+function friendlyAuthError(code) {
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-email':
+      return 'Incorrect email or password. Please check your credentials and try again.';
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. This account is temporarily locked. Try again later.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Contact your project lead.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your internet connection and try again.';
+    default:
+      return 'Sign-in failed. Please try again.';
+  }
+}
+
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +40,7 @@ export default function Login() {
       await login(email, password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err.message || 'Sign-in failed. Please try again.');
+      setError(friendlyAuthError(err.code));
     } finally {
       setLoading(false);
     }

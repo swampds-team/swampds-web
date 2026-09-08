@@ -39,13 +39,54 @@ const ROUTE_TITLES = {
  */
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const { alerts }   = useSwampdsData();
+  const { alerts, status } = useSwampdsData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Automatically close mobile drawer whenever the user navigates
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Request browser notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Fire a browser notification when systemStatus worsens
+  const prevStatusRef = React.useRef(null);
+  useEffect(() => {
+    const current = status?.systemStatus;
+    const prev    = prevStatusRef.current;
+
+    // Skip the very first render (no previous state yet)
+    if (prev === null) {
+      prevStatusRef.current = current;
+      return;
+    }
+
+    if (current !== prev) {
+      prevStatusRef.current = current;
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const messages = {
+          warning: { title: 'SWAMPDS - Warning',       body: 'Flow variation detected. Monitor closely.' },
+          leak:    { title: 'SWAMPDS - Leak Detected', body: 'Significant flow divergence detected. Inspect the pipeline immediately.' },
+          fault:   { title: 'SWAMPDS - Sensor Fault',  body: 'A flow sensor is reading near zero. Manual inspection required.' },
+          normal:  { title: 'SWAMPDS - All Clear',     body: 'System has returned to normal operation.' },
+        };
+        const msg = messages[current];
+        if (msg) {
+          new Notification(msg.title, {
+            body: msg.body,
+            icon: '/favicon.svg',
+            tag:  'swampds-status', // replaces previous notification instead of stacking
+          });
+        }
+      }
+    }
+  }, [status?.systemStatus]);
 
   const pageTitle  = ROUTE_TITLES[pathname] ?? 'SWAMPDS';
   const alertCount = alerts.filter(a => a.severity === 'critical').length;
