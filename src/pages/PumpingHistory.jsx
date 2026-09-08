@@ -30,29 +30,40 @@ export default function PumpingHistory() {
           <CardHeader title="Pumping Session Log" icon={History} />
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-slate-400">All recorded pump on/off sessions.</p>
-            <span className="text-[11px] text-slate-400 sm:hidden">Scroll table →</span>
+            {history.length > 0 && (
+              <span className="text-[11px] text-slate-400 sm:hidden">Scroll table →</span>
+            )}
           </div>
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[440px] text-left text-sm">
-              <thead>
-                <tr className="text-slate-500 border-b border-slate-100 text-xs">
-                  {['Date', 'Start', 'End', 'Duration'].map(h => (
-                    <th key={h} className="pb-3 font-medium pr-4 uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((row, idx) => (
-                  <tr key={idx} className="border-b border-slate-50 last:border-0 text-slate-700 hover:bg-slate-50 transition-colors">
-                    <td className="py-3 pr-4 font-medium">{row.date}</td>
-                    <td className="py-3 pr-4">{row.start}</td>
-                    <td className="py-3 pr-4">{row.end}</td>
-                    <td className="py-3 pr-4 font-semibold text-slate-800">{row.duration}</td>
+
+          {history.length === 0 ? (
+            <div className="py-10 text-center text-slate-400">
+              <History className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No sessions logged yet</p>
+              <p className="text-xs mt-1">Sessions appear here once the hardware starts logging pump cycles to Firebase.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <table className="w-full min-w-[440px] text-left text-sm">
+                <thead>
+                  <tr className="text-slate-500 border-b border-slate-100 text-xs">
+                    {['Date', 'Start', 'End', 'Duration'].map(h => (
+                      <th key={h} className="pb-3 font-medium pr-4 uppercase tracking-wider">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {history.map((row, idx) => (
+                    <tr key={idx} className="border-b border-slate-50 last:border-0 text-slate-700 hover:bg-slate-50 transition-colors">
+                      <td className="py-3 pr-4 font-medium">{row.date}</td>
+                      <td className="py-3 pr-4">{row.start}</td>
+                      <td className="py-3 pr-4">{row.end}</td>
+                      <td className="py-3 pr-4 font-semibold text-slate-800">{row.duration}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Event log */}

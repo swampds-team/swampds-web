@@ -19,7 +19,7 @@
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
-import { getFlowChartData, getWaterLevelChartData, getPumpHistory } from './mockHistory';
+import { getFlowChartData, getWaterLevelChartData } from './mockHistory';
 
 const db = getDatabase(app);
 
@@ -114,10 +114,33 @@ export function setControlMode(mode) {
 }
 
 /**
- * Fetch historical pump on/off event log.
+ * Subscribe to pump session history from Firebase.
+ * Backend writes a new entry to /pumpHistory each time a pump session ends.
+ *
+ * Expected Firebase shape per entry:
+ *   { date: "Sep 08 2026", start: "10:25 AM", end: "10:45 AM", duration: "20m 0s", startTimestamp: 1234567890 }
+ *
  * @returns {{ date: string, start: string, end: string, duration: string }[]}
  */
 export function usePumpHistory() {
-  const [history] = useState(() => getPumpHistory());
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const historyRef = ref(db, 'pumpHistory');
+    const unsubscribe = onValue(historyRef, (snap) => {
+      const val = snap.val();
+      if (!val) {
+        setHistory([]);
+        return;
+      }
+      // Firebase push-keys come back as an object — convert and sort newest first
+      const rows = Array.isArray(val)
+        ? val
+        : Object.values(val).sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));
+      setHistory(rows.slice(0, 50)); // cap at 50 rows
+    });
+    return unsubscribe;
+  }, []);
+
   return history;
 }
