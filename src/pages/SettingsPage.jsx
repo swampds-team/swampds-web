@@ -28,7 +28,6 @@ export default function SettingsPage() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    console.log('[SWAMPDS] Threshold settings saved (mock):', thresholds);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -36,12 +35,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
 
-      {/* Threshold configuration */}
       <Card>
         <CardHeader title="Automatic Control Thresholds" icon={Settings} iconColorClass="text-blue-500" />
         <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed">
           These thresholds control when the pump starts and stops in <strong>Auto</strong> mode.
-          Changes here are UI-only until Firebase persistence is wired in.
         </p>
 
         <form onSubmit={handleSave} className="space-y-5">
@@ -90,6 +87,11 @@ export default function SettingsPage() {
             </div>
           )}
 
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs sm:text-sm">
+            <Info className="w-4 h-4 flex-shrink-0" />
+            Threshold changes here update the display only. To change the values the hardware acts on, update them in the embedded firmware or Firebase directly.
+          </div>
+
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
             <button
               type="submit"
@@ -97,33 +99,17 @@ export default function SettingsPage() {
               className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
-              Save Thresholds
+              Save
             </button>
             {saved && (
               <span className="text-sm text-green-600 font-medium text-center sm:text-left">
-                ✓ Saved (UI only - Firebase not yet wired)
+                ✓ Saved
               </span>
             )}
           </div>
         </form>
       </Card>
 
-      {/* Firebase config placeholder */}
-      <Card>
-        <CardHeader title="Firebase Configuration" icon={Settings} iconColorClass="text-slate-400" />
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
-          {['API Key', 'Auth Domain', 'Database URL', 'Project ID'].map(field => (
-            <div key={field} className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500 w-24 sm:w-28 flex-shrink-0">{field}</span>
-              <div className="flex-1 h-8 rounded-lg bg-slate-200 animate-pulse" />
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-slate-400 mt-4 flex items-start gap-1.5 leading-relaxed">
-          <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-          Firebase credentials are configured in <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">src/firebase/firebaseConfig.js</code>.
-        </p>
-      </Card>
     </div>
   );
 }
