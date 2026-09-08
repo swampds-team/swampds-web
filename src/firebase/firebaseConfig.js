@@ -1,98 +1,34 @@
-/**
- * @fileoverview Firebase configuration - THE credential swap boundary.
- *
- * TO WIRE REAL FIREBASE (one-file change):
- * ─────────────────────────────────────────
- * 1. npm install firebase
- * 2. Replace this entire file with the following:
- *
- *    import { initializeApp } from 'firebase/app';
- *    import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
- *
- *    const firebaseConfig = {
- *      apiKey:            "YOUR_API_KEY",
- *      authDomain:        "YOUR_PROJECT.firebaseapp.com",
- *      databaseURL:       "YOUR_PROJECT.firebaseio.com",
- *      projectId:         "YOUR_PROJECT_ID",
- *      storageBucket:     "YOUR_PROJECT.appspot.com",
- *      messagingSenderId: "YOUR_SENDER_ID",
- *      appId:             "YOUR_APP_ID",
- *    };
- *
- *    const app  = initializeApp(firebaseConfig);
- *    export const auth = getAuth(app);
- *
- *    export const loginWithEmail = (email, password) =>
- *      signInWithEmailAndPassword(auth, email, password);
- *
- *    export const logoutUser = () => signOut(auth);
- *
- * Nothing outside this file changes.
- * ─────────────────────────────────────────
- *
- * MOCK BEHAVIOUR (current):
- *   - Any non-empty email + password signs in successfully.
- *   - Session is in-memory only; page reload requires signing in again.
- *     (Real Firebase onAuthStateChanged handles persistence automatically.)
- */
-
-// ---------------------------------------------------------------------------
-// Mock Auth Store
-// ---------------------------------------------------------------------------
-
-let _currentUser = null;
-const _authListeners = new Set();
-
-const _notifyAuth = (user) => {
-  _currentUser = user;
-  _authListeners.forEach(fn => fn(user));
-};
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 /**
- * Mock auth object - mirrors the shape of Firebase Auth instance.
- * AuthContext calls auth.onAuthStateChanged() to subscribe to user changes.
+ * Firebase credentials are loaded from environment variables.
+ *
+ * Locally:     add to .env.local (already gitignored - never committed)
+ * On Vercel:   add each VITE_* key in Project Settings > Environment Variables
  */
-export const auth = {
-  get currentUser() {
-    return _currentUser;
-  },
-
-  /**
-   * Subscribe to auth state changes.
-   * @param {(user: object|null) => void} callback
-   * @returns {() => void} unsubscribe function
-   */
-  onAuthStateChanged(callback) {
-    _authListeners.add(callback);
-    // Immediately invoke with current state (mirrors Firebase behaviour)
-    callback(_currentUser);
-    return () => _authListeners.delete(callback);
-  },
+const firebaseConfig = {
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL:       import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
+export const app  = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 
 /**
  * Sign in with email and password.
- * Mock: succeeds for any non-empty credentials.
+ * Accounts are created in the Firebase console - no registration UI needed.
  * @param {string} email
  * @param {string} password
- * @returns {Promise<{ uid: string, email: string }>}
  */
-export async function loginWithEmail(email, password) {
-  if (!email || !password) {
-    throw new Error('Email and password are required.');
-  }
-  // Simulate brief network latency
-  await new Promise(r => setTimeout(r, 400));
-  const user = { uid: 'mock-uid-swampds-001', email };
-  _notifyAuth(user);
-  return user;
-}
+export const loginWithEmail = (email, password) =>
+  signInWithEmailAndPassword(auth, email, password);
 
-/**
- * Sign out the current user.
- * @returns {Promise<void>}
- */
-export async function logoutUser() {
-  await new Promise(r => setTimeout(r, 150));
-  _notifyAuth(null);
-}
+/** Sign out the current user. */
+export const logoutUser = () => signOut(auth);
+
