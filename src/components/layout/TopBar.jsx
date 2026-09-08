@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { Bell, Calendar, Clock, Menu } from 'lucide-react';
 
 /**
@@ -36,15 +37,16 @@ export default function TopBar({ title, alertCount = 0, onMenuClick }) {
           <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
           <span className="font-medium text-slate-700">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
-        <button
+        <NavLink
+          to="/alerts"
           className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
-          aria-label="Notifications"
+          aria-label="View alerts"
         >
           <Bell className="w-5 h-5" />
           {alertCount > 0 && (
             <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" />
           )}
-        </button>
+        </NavLink>
       </div>
     </header>
   );
