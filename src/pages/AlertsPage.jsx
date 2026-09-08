@@ -15,16 +15,16 @@ function AlertRow({ alert }) {
   const cfg = SEVERITY_CONFIG[alert.severity] ?? SEVERITY_CONFIG.info;
   const { Icon, iconClass, labelClass, badgeCls } = cfg;
   return (
-    <div className="flex gap-4 items-start py-4 border-b border-slate-50 last:border-0">
+    <div className="flex gap-3 sm:gap-4 items-start py-3.5 sm:py-4 border-b border-slate-50 last:border-0">
       <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${iconClass}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
+          <span className={`text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
             {alert.severity.toUpperCase()}
           </span>
-          <span className="text-xs text-slate-400">{alert.time}</span>
+          <span className="text-xs text-slate-400 font-mono">{alert.time}</span>
         </div>
-        <p className="text-sm text-slate-700 mt-1 leading-snug">{alert.message}</p>
+        <p className="text-xs sm:text-sm text-slate-700 mt-1 leading-snug">{alert.message}</p>
       </div>
     </div>
   );
@@ -45,38 +45,38 @@ export default function AlertsPage() {
     <div className="space-y-6">
 
       {/* Summary chips */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-2.5 sm:gap-3 flex-wrap">
         {counts.critical > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-xl text-sm font-semibold text-red-700">
-            <AlertTriangle className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-xl text-xs sm:text-sm font-semibold text-red-700">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             {counts.critical} Critical
           </div>
         )}
         {counts.warning > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-sm font-semibold text-amber-700">
-            <AlertTriangle className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-xl text-xs sm:text-sm font-semibold text-amber-700">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             {counts.warning} Warning
           </div>
         )}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl text-sm font-semibold text-blue-700">
-          <Info className="w-4 h-4" />
+        <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl text-xs sm:text-sm font-semibold text-blue-700">
+          <Info className="w-4 h-4 flex-shrink-0" />
           {counts.info ?? 0} Info
         </div>
       </div>
 
       <Card>
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
           <CardHeader title="Alert History" icon={Bell} iconColorClass="text-red-500" />
 
-          {/* Filter buttons */}
-          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+          {/* Filter tabs */}
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full -mt-2 sm:mt-0">
             {FILTERS.map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors min-h-[36px] flex items-center ${
                   filter === f
-                    ? 'bg-white text-slate-800 shadow-sm'
+                    ? 'bg-white text-slate-800 shadow-xs font-bold'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -92,7 +92,7 @@ export default function AlertsPage() {
             <p className="text-sm">No {filter !== 'all' ? filter : ''} alerts.</p>
           </div>
         ) : (
-          <div>
+          <div className="divide-y divide-slate-50">
             {filtered.map((alert, idx) => (
               <AlertRow key={idx} alert={alert} />
             ))}

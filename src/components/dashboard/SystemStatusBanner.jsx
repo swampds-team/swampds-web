@@ -3,8 +3,9 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 /**
  * Four-state system status banner.
+ * Responsive: stacks comfortably on mobile (<640px), horizontal on tablet & desktop.
  *
- * Visual distinction guide (for judges/demos):
+ * Visual distinction guide:
  *   normal  → solid green,  steady -  "all clear"
  *   warning → amber,        steady -  "pay attention"
  *   leak    → orange-600,   steady -  "action needed"
@@ -54,16 +55,18 @@ export default function SystemStatusBanner({ systemStatus }) {
 
   return (
     <div
-      className={`rounded-2xl p-6 flex items-center gap-5 shadow-md transition-colors duration-500 ${bg} ${text}`}
+      className={`rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-5 shadow-md transition-colors duration-500 ${bg} ${text}`}
       role="alert"
       aria-live="assertive"
     >
-      <Icon className="w-10 h-10 flex-shrink-0" />
-      <div className="flex-1">
-        <h2 className="text-2xl font-bold tracking-wide leading-none">{label}</h2>
-        <p className="opacity-90 text-sm mt-1">{desc}</p>
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
+        <Icon className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 mt-0.5 sm:mt-0" />
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-wide leading-tight">{label}</h2>
+          <p className="opacity-90 text-xs sm:text-sm mt-1 leading-snug">{desc}</p>
+        </div>
       </div>
-      <div className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold ${badgeBg}`}>
+      <div className={`self-start sm:self-center flex-shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide ${badgeBg}`}>
         {systemStatus.toUpperCase()}
       </div>
     </div>

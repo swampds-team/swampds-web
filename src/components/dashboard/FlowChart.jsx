@@ -18,54 +18,62 @@ const LINES = [
 ];
 
 /**
- * @param {{ data: { time: string, F1: number, F2: number, F3: number }[] }} props
+ * @param {{ data: { time: string, F1: number, F2: number, F3: number }[], noCard?: boolean }} props
  */
-export default function FlowChart({ data }) {
+export default function FlowChart({ data, noCard = false }) {
+  const chartContent = (
+    <div className="h-64 sm:h-72 mt-4 text-xs">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <XAxis
+            dataKey="time"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: '#94a3b8', fontSize: 11 }}
+            minTickGap={35}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: '#94a3b8', fontSize: 11 }}
+            domain={[0, 7]}
+            tickFormatter={v => `${v}`}
+          />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            formatter={(v, name) => [`${v} L/min`, name]}
+          />
+          <Legend
+            iconType="circle"
+            wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
+          />
+          {/* Normal operating band */}
+          <ReferenceLine y={5.3} stroke="#cbd5e1" strokeDasharray="4 2" />
+          <ReferenceLine y={4.4} stroke="#cbd5e1" strokeDasharray="4 2" />
+          {LINES.map(({ key, name, color }) => (
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              name={name}
+              stroke={color}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  if (noCard) return chartContent;
+
   return (
     <Card>
       <CardHeader title="Flow Rate Overview (24 h)" />
-      <div className="h-64 mt-4 text-xs">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis
-              dataKey="time"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: '#94a3b8' }}
-              minTickGap={30}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: '#94a3b8' }}
-              domain={[0, 7]}
-              tickFormatter={v => `${v}`}
-              label={{ value: 'L/min', angle: -90, position: 'insideLeft', offset: 25, style: { fill: '#94a3b8', fontSize: 10 } }}
-            />
-            <Tooltip
-              contentStyle={TOOLTIP_STYLE}
-              formatter={(v) => [`${v} L/min`]}
-            />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-            {/* Normal operating band */}
-            <ReferenceLine y={5.3} stroke="#94a3b8" strokeDasharray="4 2" label={{ value: 'Max normal', position: 'right', fontSize: 9, fill: '#94a3b8' }} />
-            <ReferenceLine y={4.4} stroke="#94a3b8" strokeDasharray="4 2" label={{ value: 'Min normal', position: 'right', fontSize: 9, fill: '#94a3b8' }} />
-            {LINES.map(({ key, name, color }) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                name={name}
-                stroke={color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4 }}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {chartContent}
     </Card>
   );
 }

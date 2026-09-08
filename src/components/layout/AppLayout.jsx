@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -35,23 +35,36 @@ const ROUTE_TITLES = {
 
 /**
  * Root shell for all authenticated pages.
- * Uses <Outlet /> so react-router nested routes render inside <main>.
- * Derives page title automatically from pathname.
+ * Responsive layout: drawer on mobile (<768px), persistent sidebar on desktop (>=768px).
  */
 export default function AppLayout() {
   const { pathname } = useLocation();
   const { alerts }   = useSwampdsData();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Automatically close mobile drawer whenever the user navigates
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   const pageTitle  = ROUTE_TITLES[pathname] ?? 'SWAMPDS';
   const alertCount = alerts.filter(a => a.severity === 'critical').length;
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar navItems={NAV_ITEMS} />
+      <Sidebar
+        navItems={NAV_ITEMS}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar title={pageTitle} alertCount={alertCount} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <TopBar
+          title={pageTitle}
+          alertCount={alertCount}
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+        />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

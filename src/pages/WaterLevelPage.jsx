@@ -27,23 +27,23 @@ export default function WaterLevelPage() {
     <div className="space-y-6">
 
       {/* Reading cards row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
         {/* Big gauge */}
         <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader title="Current Level" icon={Droplets} iconColorClass="text-blue-500" />
           <div className="flex items-end justify-between mt-2">
             <div>
-              <div className="text-5xl font-bold text-blue-600 leading-none">
-                {pct}<span className="text-2xl ml-1">%</span>
+              <div className="text-4xl sm:text-5xl font-bold text-blue-600 leading-none">
+                {pct}<span className="text-xl sm:text-2xl ml-1">%</span>
               </div>
-              <div className="text-lg text-slate-500 mt-2 font-medium">{cm} cm depth</div>
+              <div className="text-base sm:text-lg text-slate-500 mt-2 font-medium">{cm} cm depth</div>
               <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-semibold ${levelStatus.bg} ${levelStatus.color}`}>
                 {levelStatus.label}
               </div>
             </div>
-            <div className="mr-2">
-              <WaterLevelIndicator percent={pct} className="w-24 h-40" />
+            <div className="mr-1 sm:mr-2 flex-shrink-0">
+              <WaterLevelIndicator percent={pct} className="w-20 h-36 sm:w-24 sm:h-40" />
             </div>
           </div>
         </Card>
@@ -51,18 +51,18 @@ export default function WaterLevelPage() {
         {/* Last updated */}
         <Card>
           <CardHeader title="Last Sensor Update" />
-          <div className="text-2xl font-bold text-slate-800 mt-2">{lastUpdatedStr}</div>
+          <div className="text-xl sm:text-2xl font-bold text-slate-800 mt-2">{lastUpdatedStr}</div>
           <div className="text-sm text-slate-500 mt-1">
             {new Date(lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
-          <div className="text-xs text-green-600 font-semibold mt-3 flex items-center gap-1">
+          <div className="text-xs text-green-600 font-semibold mt-3 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
             Live data - updates every 3 s
           </div>
         </Card>
 
         {/* Auto control thresholds */}
-        <Card className="lg:col-span-2">
+        <Card className="sm:col-span-2 lg:col-span-2">
           <CardHeader title="Auto-Control Thresholds" />
           <p className="text-xs text-slate-400 mb-4">
             In <strong>Auto</strong> mode the pump starts/stops at these levels automatically.
@@ -90,9 +90,7 @@ export default function WaterLevelPage() {
       {/* Full-width trend chart */}
       <Card>
         <CardHeader title="Water Level - Last 24 Hours" />
-        <div className="h-80 mt-4 text-xs">
-          <WaterLevelChart data={waterLevelData} fullHeight />
-        </div>
+        <WaterLevelChart data={waterLevelData} noCard />
       </Card>
 
     </div>

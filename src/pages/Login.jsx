@@ -28,10 +28,10 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen flex font-sans overflow-hidden">
+    <div className="min-h-screen flex font-sans bg-slate-50">
 
-      {/* ── Left panel - dark navy brand ── */}
-      <div className="hidden md:flex w-80 bg-[#0B1120] flex-col justify-between p-10 flex-shrink-0">
+      {/* ── Left panel - dark navy brand (desktop only) ── */}
+      <div className="hidden md:flex w-80 bg-[#0B1120] flex-col justify-between p-8 lg:p-10 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Droplets className="w-8 h-8 text-blue-500" />
           <div>
@@ -79,16 +79,19 @@ export default function Login() {
       </div>
 
       {/* ── Right panel - sign-in form ── */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-8">
-        {/* Mobile brand */}
-        <div className="md:hidden flex items-center gap-2 mb-10">
-          <Droplets className="w-7 h-7 text-blue-600" />
-          <span className="font-bold text-lg text-slate-800">SWAMPDS</span>
+      <div className="flex-1 flex flex-col items-center justify-center p-5 sm:p-8 my-auto">
+        {/* Mobile brand header */}
+        <div className="md:hidden flex items-center gap-2.5 mb-8">
+          <Droplets className="w-8 h-8 text-blue-600" />
+          <div>
+            <span className="font-bold text-xl text-slate-800 tracking-tight leading-none block">SWAMPDS</span>
+            <span className="text-[10px] text-slate-500">Smart Water &amp; Leak Monitoring</span>
+          </div>
         </div>
 
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-bold text-slate-800 mb-1">Welcome back</h2>
-          <p className="text-sm text-slate-500 mb-8">
+          <p className="text-xs sm:text-sm text-slate-500 mb-6 sm:mb-8">
             Sign in to access the control dashboard.
           </p>
 
@@ -99,9 +102,9 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                 Email address
               </label>
               <input
@@ -112,12 +115,12 @@ export default function Login() {
                 required
                 autoComplete="email"
                 placeholder="admin@swampds.local"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -129,12 +132,12 @@ export default function Login() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-3 pr-12 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center"
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -145,7 +148,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-xs"
             >
               {loading && (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -154,7 +157,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-xs text-slate-400 mt-8 text-center leading-relaxed">
+          <p className="text-xs text-slate-400 mt-6 sm:mt-8 text-center leading-relaxed">
             Accounts are provisioned manually in the Firebase console.<br />
             Contact your project lead if you need access.
           </p>

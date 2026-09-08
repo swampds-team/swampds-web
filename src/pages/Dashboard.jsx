@@ -28,24 +28,26 @@ export default function Dashboard() {
       {/* 1 - Safety banner (full width) */}
       <SystemStatusBanner systemStatus={status.systemStatus} />
 
-      {/* 2 - KPI cards row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      {/* 2 - KPI cards row: 1 col on mobile, 2 col on tablet, 5 col on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
         <WaterLevelCard percent={sensors.waterLevelPercent} cm={sensors.waterLevelCm} />
 
         {FLOW_SENSORS.map(({ key, ...props }) => (
           <FlowSensorCard key={key} value={sensors[key]} {...props} />
         ))}
 
-        <PumpControlCard
-          pumpStatus={status.pumpStatus}
-          controlMode={status.controlMode}
-          onToggleMode={handleToggleMode}
-          onPumpCommand={handlePumpCommand}
-        />
+        <div className="sm:col-span-2 lg:col-span-1">
+          <PumpControlCard
+            pumpStatus={status.pumpStatus}
+            controlMode={status.controlMode}
+            onToggleMode={handleToggleMode}
+            onPumpCommand={handlePumpCommand}
+          />
+        </div>
       </div>
 
-      {/* 3 - Charts + alerts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 3 - Charts + alerts row: 1 col on mobile & tablet, 3 col on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <WaterLevelChart data={waterLevelData} />
         <FlowChart       data={flowData} />
         <AlertsPanel     alerts={alerts} />
