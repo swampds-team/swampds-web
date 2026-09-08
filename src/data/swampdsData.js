@@ -61,9 +61,17 @@ onValue(ref(db, '/'), (snap) => {
     }
   }
 
+  // Map the nested backend structure and uppercase values to the frontend format
+  const backendStatus = val.status || {};
+  const mappedStatus = {
+    systemStatus: backendStatus.system?.status?.toLowerCase() ?? initialData.status.systemStatus,
+    pumpStatus:   backendStatus.system?.pumpState?.toLowerCase() ?? initialData.status.pumpStatus,
+    controlMode:  backendStatus.controlMode?.toLowerCase() ?? initialData.status.controlMode,
+  };
+
   _notify({
     sensors: val.sensors ?? initialData.sensors,
-    status:  val.status  ?? initialData.status,
+    status:  mappedStatus,
     control: val.control ?? initialData.control,
     alerts,
   });
