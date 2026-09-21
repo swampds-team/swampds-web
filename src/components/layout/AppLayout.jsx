@@ -8,6 +8,7 @@ import {
   Bell,
   History,
   Settings,
+  FlaskConical,
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar  from './TopBar';
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { to: '/alerts',       icon: Bell,            label: 'Alerts'       },
   { to: '/history',      icon: History,         label: 'Pumping History' },
   { to: '/settings',     icon: Settings,        label: 'Settings'     },
+  { to: '/twin',         icon: FlaskConical,    label: 'Digital Twin' },
 ];
 
 const ROUTE_TITLES = {
@@ -31,6 +33,7 @@ const ROUTE_TITLES = {
   '/alerts':       'Alerts',
   '/history':      'Pumping History',
   '/settings':     'Settings',
+  '/twin':         'Digital Twin Simulation',
 };
 
 /**

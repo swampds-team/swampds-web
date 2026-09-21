@@ -1,165 +1,356 @@
 import React from 'react';
 
 /**
- * Animated pipeline schematic:
- *   SOURCE TANK → PUMP → F1 → VALVE A → F2 → VALVE B → F3 → DELIVERY TANK
- *
- * Laid out horizontally on wide screens and vertically on phones, so the labels
- * stay readable at any width. Glyphs are drawn upright and only positioned by
- * layout; the flow direction is always node 0 → node 7.
+ * Modern, Minimalist Vector Pipeline Schematic
+ * Clean geometric lines, subtle fluid flow, and clear visual hierarchy.
  */
 
-const HORIZONTAL = { viewBox: '0 40 960 180', at: (i) => ({ x: 70 + i * 117, y: 100 }) };
-const VERTICAL   = { viewBox: '0 0 300 900', at: (i) => ({ x: 70, y: 60 + i * 111 }) };
-
-// Pipe i joins node i → i+1. Pipes 2-3 are segment A (F1→F2), pipes 4-5 are segment B (F2→F3).
-const PIPE_SEGMENT = [null, null, 'A', 'A', 'B', 'B', null];
-
-const COLOR = {
-  pipe: '#cbd5e1',
-  warn: '#f59e0b',
-  leak: '#ef4444',
-  water: '#38bdf8',
-  ink: '#0f172a',
-  muted: '#64748b',
+const HORIZONTAL = {
+  viewBox: '0 0 920 180',
+  at: (i) => ({ x: 60 + i * 115, y: 80 }),
 };
 
+const VERTICAL = {
+  viewBox: '0 0 320 860',
+  at: (i) => ({ x: 75, y: 55 + i * 105 }),
+};
+
+const PIPE_SEGMENT = [null, null, 'A', 'A', 'B', 'B', null];
 const clamp = (v, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, v));
 
-function Label({ x, y, horizontal, title, lines = [] }) {
-  const anchor = horizontal ? 'middle' : 'start';
-  const lx = horizontal ? x : x + 50;
-  const top = horizontal ? y + 66 : y - 6;
-  return (
-    <g>
-      <text x={lx} y={top} textAnchor={anchor} fontSize="13" fontWeight="700" fill={COLOR.ink}>{title}</text>
-      {lines.map((l, i) => (
-        <text key={i} x={lx} y={top + 16 * (i + 1)} textAnchor={anchor} fontSize="12" fontWeight={l.bold ? 700 : 400} fill={l.color ?? COLOR.muted}>
-          {l.text}
-        </text>
-      ))}
-    </g>
-  );
-}
-
-function Tank({ x, y, pct, marks = [] }) {
-  const w = 64, h = 84, inner = h - 6;
-  const fillH = (clamp(pct) / 100) * inner;
-  const yAt = (p) => h / 2 - 3 - (p / 100) * inner;
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="8" fill="#fff" stroke={COLOR.muted} strokeWidth="3" />
-      <rect x={-w / 2 + 3} y={h / 2 - 3 - fillH} width={w - 6} height={fillH} rx="4" fill={COLOR.water} opacity="0.75" />
-      {marks.map((m) => (
-        <line key={m} x1={-w / 2} x2={w / 2} y1={yAt(m)} y2={yAt(m)} stroke="#475569" strokeWidth="1.5" strokeDasharray="4 3" />
-      ))}
-      <text textAnchor="middle" y="5" fontSize="15" fontWeight="700" fill={COLOR.ink}>{Math.round(pct)}%</text>
-    </g>
-  );
-}
-
-function Pump({ x, y, on }) {
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <circle r="27" fill={on ? '#22c55e' : '#94a3b8'} stroke={on ? '#15803d' : COLOR.muted} strokeWidth="3" />
-      <text textAnchor="middle" y="6" fontSize="18" fontWeight="700" fill="#fff">P</text>
-    </g>
-  );
-}
-
-function Sensor({ x, y, name }) {
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <circle r="22" fill="#fff" stroke="#475569" strokeWidth="3" />
-      <text textAnchor="middle" y="5" fontSize="14" fontWeight="700" fill={COLOR.ink}>{name}</text>
-    </g>
-  );
-}
-
-function Valve({ x, y, id, opening, leaking, horizontal }) {
-  const open = opening > 0;
-  // drips fall downward; keep them clear of the label on each layout
-  const drip = horizontal ? { dx: 0, dy: 24 } : { dx: -30, dy: 0 };
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <circle r="21" fill={open ? '#fed7aa' : '#e2e8f0'} stroke={open ? '#ea580c' : COLOR.muted} strokeWidth="3" />
-      <text textAnchor="middle" y="6" fontSize="17" fontWeight="700" fill={COLOR.ink}>{id}</text>
-      {leaking && [0, 0.3, 0.6].map((delay, i) => (
-        <circle key={i} className="twin-drip" cx={drip.dx + (i - 1) * 7} cy={drip.dy} r="4" fill={COLOR.water}
-          style={{ animationDelay: `${delay}s` }} />
-      ))}
-    </g>
-  );
-}
-
-/**
- * @param {{
- *   sim: object,                 engine state
- *   config: object,              engine config (used for the level marks)
- *   relay: 'open'|'closed',
- *   horizontal: boolean,
- * }} props
- */
-export default function PipelineSchematic({ sim, config, relay, horizontal }) {
+export default function PipelineSchematic({
+  sim,
+  horizontal,
+  onToggleValve,
+  onTogglePump,
+}) {
   const layout = horizontal ? HORIZONTAL : VERTICAL;
   const pos = Array.from({ length: 8 }, (_, i) => layout.at(i));
-  const { flows, tanks, valves, leakFlow, segments, pumpOn, status } = sim;
+  const { flows, tanks, valves, leakFlow, segments, pumpOn } = sim;
 
   const pipeFlow = [flows.f1, flows.f1, flows.f1, flows.f2, flows.f2, flows.f3, flows.f3];
-  const segColor = (id) => {
-    if (!id) return COLOR.pipe;
-    const seg = segments[id];
-    return seg.leak ? COLOR.leak : seg.abnormalFor > 0 ? COLOR.warn : COLOR.pipe;
-  };
 
-  const flowLine = (v) => ({ text: `${v.toFixed(2)} L/min`, bold: true, color: COLOR.ink });
-  const valveLines = (id) => {
-    const lines = [{ text: `${valves[id]}% open` }];
-    if (leakFlow[id] > 0.05) lines.push({ text: `Leak ${leakFlow[id].toFixed(2)} L/min`, bold: true, color: COLOR.leak });
-    return lines;
+  const getPipeColor = (segId) => {
+    if (!segId) return 'stroke-slate-200 dark:stroke-slate-800';
+    const seg = segments[segId];
+    if (seg.leak) return 'stroke-rose-500';
+    if (seg.abnormalFor > 0) return 'stroke-amber-400';
+    return 'stroke-slate-200 dark:stroke-slate-800';
   };
 
   return (
-    <svg
-      viewBox={layout.viewBox}
-      className={horizontal ? 'w-full h-auto' : 'w-full max-w-[320px] mx-auto h-auto'}
-      role="img"
-      aria-label={`Pipeline schematic. System status ${status}. Pump ${pumpOn ? 'on' : 'off'}. Sensors read ${flows.f1.toFixed(2)}, ${flows.f2.toFixed(2)} and ${flows.f3.toFixed(2)} litres per minute.`}
-    >
-      {/* pipes (behind the nodes) */}
-      {pipeFlow.map((flow, i) => {
-        const a = pos[i], b = pos[i + 1];
-        return (
-          <g key={i}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={segColor(PIPE_SEGMENT[i])} strokeWidth="12" />
-            {flow > 0.05 && (
-              <line className="twin-flow" x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                stroke={COLOR.water} strokeWidth="4" strokeDasharray="10 18" />
-            )}
-          </g>
-        );
-      })}
+    <div className="w-full relative select-none py-2">
+      <svg
+        viewBox={layout.viewBox}
+        className={horizontal ? 'w-full h-auto max-h-[220px]' : 'w-full max-w-[320px] mx-auto h-auto'}
+        role="img"
+        aria-label="Pipeline schematic"
+      >
+        {/* ── Connecting Pipe Lines ── */}
+        {pipeFlow.map((flow, i) => {
+          const a = pos[i], b = pos[i + 1];
+          const hasFlow = flow > 0.08;
+          const segId = PIPE_SEGMENT[i];
+          const isLeakingSeg = segId && segments[segId].leak;
 
-      {/* nodes */}
-      <Tank x={pos[0].x} y={pos[0].y} pct={tanks.source} />
-      <Pump x={pos[1].x} y={pos[1].y} on={pumpOn} />
-      <Sensor x={pos[2].x} y={pos[2].y} name="F1" />
-      <Valve x={pos[3].x} y={pos[3].y} id="A" opening={valves.A} leaking={leakFlow.A > 0.05} horizontal={horizontal} />
-      <Sensor x={pos[4].x} y={pos[4].y} name="F2" />
-      <Valve x={pos[5].x} y={pos[5].y} id="B" opening={valves.B} leaking={leakFlow.B > 0.05} horizontal={horizontal} />
-      <Sensor x={pos[6].x} y={pos[6].y} name="F3" />
-      <Tank x={pos[7].x} y={pos[7].y} pct={tanks.delivery} marks={[config.lowLevelPct, config.fullLevelPct]} />
+          return (
+            <g key={i}>
+              {/* Background pipe channel */}
+              <line
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                className={getPipeColor(segId)}
+                strokeWidth={isLeakingSeg ? '5' : '4'}
+                strokeLinecap="round"
+              />
+              {/* Active subtle fluid dash */}
+              {hasFlow && (
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  stroke="#38bdf8"
+                  strokeWidth="2.5"
+                  strokeDasharray="6 12"
+                  strokeLinecap="round"
+                  className="fluid-flow"
+                />
+              )}
+            </g>
+          );
+        })}
 
-      {/* labels */}
-      <Label {...pos[0]} horizontal={horizontal} title="SOURCE TANK" lines={[{ text: 'water supply' }]} />
-      <Label {...pos[1]} horizontal={horizontal} title="PUMP"
-        lines={[{ text: pumpOn ? 'running' : 'stopped', bold: true, color: pumpOn ? '#15803d' : COLOR.muted }, { text: `relay ${relay}` }]} />
-      <Label {...pos[2]} horizontal={horizontal} title="SENSOR F1" lines={[flowLine(flows.f1)]} />
-      <Label {...pos[3]} horizontal={horizontal} title="VALVE A" lines={valveLines('A')} />
-      <Label {...pos[4]} horizontal={horizontal} title="SENSOR F2" lines={[flowLine(flows.f2)]} />
-      <Label {...pos[5]} horizontal={horizontal} title="VALVE B" lines={valveLines('B')} />
-      <Label {...pos[6]} horizontal={horizontal} title="SENSOR F3" lines={[flowLine(flows.f3)]} />
-      <Label {...pos[7]} horizontal={horizontal} title="DELIVERY TANK" lines={[{ text: 'monitored level' }]} />
-    </svg>
+        {/* ── Node 0: Source Tank ── */}
+        <g transform={`translate(${pos[0].x},${pos[0].y})`}>
+          <rect
+            x="-26"
+            y="-34"
+            width="52"
+            height="68"
+            rx="8"
+            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
+            strokeWidth="2"
+          />
+          {/* Water Fill */}
+          <rect
+            x="-24"
+            y={32 - (clamp(tanks.source) / 100) * 64}
+            width="48"
+            height={(clamp(tanks.source) / 100) * 64}
+            rx="6"
+            className="fill-sky-400/30 dark:fill-sky-500/30"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="12"
+            fontWeight="700"
+            className="fill-slate-800 dark:fill-slate-100 font-mono"
+          >
+            {Math.round(tanks.source)}%
+          </text>
+        </g>
+
+        {/* ── Node 1: Pump ── */}
+        <g
+          transform={`translate(${pos[1].x},${pos[1].y})`}
+          className="cursor-pointer"
+          onClick={onTogglePump}
+        >
+          <circle
+            r="22"
+            className={
+              pumpOn
+                ? 'fill-emerald-50 dark:fill-emerald-950/40 stroke-emerald-500'
+                : 'fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700'
+            }
+            strokeWidth="2"
+          />
+          <path
+            d="M -6 -7 L 8 0 L -6 7 Z"
+            className={pumpOn ? 'fill-emerald-600' : 'fill-slate-400'}
+          />
+        </g>
+
+        {/* ── Node 2: Sensor F1 ── */}
+        <g transform={`translate(${pos[2].x},${pos[2].y})`}>
+          <rect
+            x="-24"
+            y="-18"
+            width="48"
+            height="36"
+            rx="8"
+            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
+            strokeWidth="2"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="11"
+            fontWeight="700"
+            className="fill-blue-600 dark:fill-blue-400 font-mono"
+          >
+            F1
+          </text>
+        </g>
+
+        {/* ── Node 3: Valve A ── */}
+        <g
+          transform={`translate(${pos[3].x},${pos[3].y})`}
+          className="cursor-pointer"
+          onClick={() => onToggleValve?.('A', valves.A > 0 ? 0 : 25)}
+        >
+          <circle
+            r="18"
+            className={
+              valves.A > 0
+                ? 'fill-amber-50 dark:fill-amber-950/40 stroke-amber-500'
+                : 'fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700'
+            }
+            strokeWidth="2"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="11"
+            fontWeight="700"
+            className={valves.A > 0 ? 'fill-amber-600 dark:fill-amber-400 font-mono' : 'fill-slate-600 dark:fill-slate-400 font-mono'}
+          >
+            VA
+          </text>
+          {/* Subtle drip if leaking */}
+          {leakFlow.A > 0.05 && (
+            <circle cx="0" cy="24" r="3" fill="#0284c7" className="gentle-drip" />
+          )}
+        </g>
+
+        {/* ── Node 4: Sensor F2 ── */}
+        <g transform={`translate(${pos[4].x},${pos[4].y})`}>
+          <rect
+            x="-24"
+            y="-18"
+            width="48"
+            height="36"
+            rx="8"
+            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
+            strokeWidth="2"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="11"
+            fontWeight="700"
+            className="fill-blue-600 dark:fill-blue-400 font-mono"
+          >
+            F2
+          </text>
+        </g>
+
+        {/* ── Node 5: Valve B ── */}
+        <g
+          transform={`translate(${pos[5].x},${pos[5].y})`}
+          className="cursor-pointer"
+          onClick={() => onToggleValve?.('B', valves.B > 0 ? 0 : 25)}
+        >
+          <circle
+            r="18"
+            className={
+              valves.B > 0
+                ? 'fill-amber-50 dark:fill-amber-950/40 stroke-amber-500'
+                : 'fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700'
+            }
+            strokeWidth="2"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="11"
+            fontWeight="700"
+            className={valves.B > 0 ? 'fill-amber-600 dark:fill-amber-400 font-mono' : 'fill-slate-600 dark:fill-slate-400 font-mono'}
+          >
+            VB
+          </text>
+          {/* Subtle drip if leaking */}
+          {leakFlow.B > 0.05 && (
+            <circle cx="0" cy="24" r="3" fill="#0284c7" className="gentle-drip" />
+          )}
+        </g>
+
+        {/* ── Node 6: Sensor F3 ── */}
+        <g transform={`translate(${pos[6].x},${pos[6].y})`}>
+          <rect
+            x="-24"
+            y="-18"
+            width="48"
+            height="36"
+            rx="8"
+            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
+            strokeWidth="2"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="11"
+            fontWeight="700"
+            className="fill-blue-600 dark:fill-blue-400 font-mono"
+          >
+            F3
+          </text>
+        </g>
+
+        {/* ── Node 7: Delivery Tank ── */}
+        <g transform={`translate(${pos[7].x},${pos[7].y})`}>
+          <rect
+            x="-26"
+            y="-34"
+            width="52"
+            height="68"
+            rx="8"
+            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
+            strokeWidth="2"
+          />
+          {/* Water Fill */}
+          <rect
+            x="-24"
+            y={32 - (clamp(tanks.delivery) / 100) * 64}
+            width="48"
+            height={(clamp(tanks.delivery) / 100) * 64}
+            rx="6"
+            className="fill-sky-400/30 dark:fill-sky-500/30"
+          />
+          <text
+            textAnchor="middle"
+            y="4"
+            fontSize="12"
+            fontWeight="700"
+            className="fill-slate-800 dark:fill-slate-100 font-mono"
+          >
+            {Math.round(tanks.delivery)}%
+          </text>
+        </g>
+
+        {/* ── Minimalist Clean Labels ── */}
+        {horizontal ? (
+          <>
+            {/* Source */}
+            <text x={pos[0].x} y="132" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Source</text>
+
+            {/* Pump */}
+            <text x={pos[1].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Pump</text>
+            <text x={pos[1].x} y="142" textAnchor="middle" fontSize="10" fontWeight="700" className={pumpOn ? 'fill-emerald-600 font-mono' : 'fill-slate-400 font-mono'}>
+              {pumpOn ? 'ON' : 'OFF'}
+            </text>
+
+            {/* F1 */}
+            <text x={pos[2].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Sensor 1</text>
+            <text x={pos[2].x} y="142" textAnchor="middle" fontSize="10.5" fontWeight="600" className="fill-slate-700 dark:fill-slate-300 font-mono">
+              {flows.f1.toFixed(2)} L/m
+            </text>
+
+            {/* Valve A */}
+            <text x={pos[3].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Valve A</text>
+            <text x={pos[3].x} y="142" textAnchor="middle" fontSize="10.5" fontWeight="600" className={valves.A > 0 ? 'fill-amber-600 font-mono' : 'fill-slate-400 font-mono'}>
+              {valves.A}%
+            </text>
+
+            {/* F2 */}
+            <text x={pos[4].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Sensor 2</text>
+            <text x={pos[4].x} y="142" textAnchor="middle" fontSize="10.5" fontWeight="600" className="fill-slate-700 dark:fill-slate-300 font-mono">
+              {flows.f2.toFixed(2)} L/m
+            </text>
+
+            {/* Valve B */}
+            <text x={pos[5].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Valve B</text>
+            <text x={pos[5].x} y="142" textAnchor="middle" fontSize="10.5" fontWeight="600" className={valves.B > 0 ? 'fill-amber-600 font-mono' : 'fill-slate-400 font-mono'}>
+              {valves.B}%
+            </text>
+
+            {/* F3 */}
+            <text x={pos[6].x} y="128" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Sensor 3</text>
+            <text x={pos[6].x} y="142" textAnchor="middle" fontSize="10.5" fontWeight="600" className="fill-slate-700 dark:fill-slate-300 font-mono">
+              {flows.f3.toFixed(2)} L/m
+            </text>
+
+            {/* Delivery */}
+            <text x={pos[7].x} y="132" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Delivery</text>
+          </>
+        ) : (
+          /* Vertical Mobile Labels */
+          <>
+            <text x={pos[0].x + 45} y={pos[0].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">Source Tank ({Math.round(tanks.source)}%)</text>
+            <text x={pos[1].x + 45} y={pos[1].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">Pump: {pumpOn ? 'Running' : 'Stopped'}</text>
+            <text x={pos[2].x + 45} y={pos[2].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">F1: {flows.f1.toFixed(2)} L/min</text>
+            <text x={pos[3].x + 45} y={pos[3].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">Valve A: {valves.A}% open</text>
+            <text x={pos[4].x + 45} y={pos[4].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">F2: {flows.f2.toFixed(2)} L/min</text>
+            <text x={pos[5].x + 45} y={pos[5].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">Valve B: {valves.B}% open</text>
+            <text x={pos[6].x + 45} y={pos[6].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">F3: {flows.f3.toFixed(2)} L/min</text>
+            <text x={pos[7].x + 45} y={pos[7].y + 4} fontSize="12" fontWeight="600" className="fill-slate-700 dark:fill-slate-300">Delivery Tank ({Math.round(tanks.delivery)}%)</text>
+          </>
+        )}
+      </svg>
+    </div>
   );
 }

@@ -34,6 +34,17 @@ export const DEFAULT_CONFIG = {
   historyLength: 40,       // samples kept for the rolling flow chart (PRD FR14)
 };
 
+/**
+ * Smallest valve opening (%) that is reliably flagged as a leak.
+ * A valve at `o` % loses o * maxLeakFraction % of the flow, and that loss must beat the
+ * tolerance by a small margin to survive sensor noise (measured: ~2 points is enough).
+ * Anything smaller stays inside the tolerance and is intentionally NOT reported.
+ */
+export function reliableLeakOpening(config) {
+  const NOISE_MARGIN_PCT = 2;
+  return Math.min(100, Math.ceil((config.tolerancePct + NOISE_MARGIN_PCT) / config.maxLeakFraction));
+}
+
 /** Human-readable description of each pipe segment. */
 export const SEGMENTS = {
   A: { valve: 'A', from: 'F1', to: 'F2', label: 'F1 → F2 (Valve A)' },

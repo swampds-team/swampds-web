@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DEFAULT_CONFIG } from './config.js';
+import { DEFAULT_CONFIG, reliableLeakOpening } from './config.js';
+import { DEMO_PRESETS } from './presets.js';
 import {
   createInitialState, step, setValve, setMode, setManualCommand,
   acknowledgeReset, refillSource, emptyDelivery,
@@ -219,4 +220,38 @@ test('operator actions are logged, but slider drags are not', () => {
   s = setValve(s, 'A', 0);    // closed
   assert.equal(s.events.length - before, 2);
   assert.ok(s.events.every((e, i) => i === s.events.length - 1 || e.id > s.events[i + 1].id), 'newest first');
+});
+
+
+/** Fraction of 100 seeded runs in which a valve opened to `opening` % is confirmed as a leak within 20 s. */
+function detectionRate(opening, config = CFG) {
+  let hits = 0;
+  for (let seed = 1; seed <= 100; seed++) {
+    const rng = seeded(seed);
+    let s = run(createInitialState(), 3, config, rng);
+    s = setValve(s, 'A', opening);
+    for (let i = 0; i < 29 && !s.latched; i++) s = step(s, config, DT, rng);
+    if (s.latched) hits++;
+  }
+  return hits / 100;
+}
+
+test('reliableLeakOpening is the smallest opening the detector really catches', () => {
+  assert.equal(reliableLeakOpening(CFG), 20);
+  assert.ok(detectionRate(reliableLeakOpening(CFG)) >= 0.98);
+  assert.equal(detectionRate(15), 0, '15% opening loses 9% of flow, inside the 10% tolerance');
+
+  const loose = { ...CFG, tolerancePct: 20 };
+  assert.ok(detectionRate(reliableLeakOpening(loose), loose) >= 0.98);
+});
+
+test('every leak preset opens a valve far enough to be detected with default settings', () => {
+  for (const preset of DEMO_PRESETS.filter((p) => p.id !== 'normal')) {
+    const opened = { A: 0, B: 0 };
+    preset.apply({ setValve: (id, v) => { opened[id] = v; }, setMode() {}, refillSource() {} });
+    assert.ok(
+      Math.max(opened.A, opened.B) >= reliableLeakOpening(CFG),
+      `${preset.id} opens only ${JSON.stringify(opened)}`,
+    );
+  }
 });
