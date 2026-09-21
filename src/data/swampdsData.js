@@ -23,7 +23,7 @@ import { app } from '../firebase/firebaseConfig';
 
 const db = getDatabase(app);
 
-/** Auto-pump thresholds (% water level). Enforced by the firmware; the web app only displays them. */
+/** Auto-pump thresholds (% water level). Display values only - the web app does not enforce them. */
 export const PUMP_THRESHOLDS = { low: 20, full: 95 };
 
 // ── Live store (populated by Firebase onValue) ────────────────────────────────

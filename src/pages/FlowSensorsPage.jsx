@@ -191,7 +191,7 @@ export default function FlowSensorsPage() {
         <Card>
           <CardHeader title="Leak Detection Thresholds" icon={Activity} iconColorClass="text-slate-400" />
           <p className="text-xs text-slate-400 mb-4">
-            System evaluates max deviation between all three sensors every 3 seconds.
+            System status is based on the maximum deviation between the three sensors.
           </p>
           <div className="space-y-3">
             {THRESHOLDS.map(({ label, value, color }) => (
@@ -202,7 +202,7 @@ export default function FlowSensorsPage() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-4">
-            Detection thresholds are set in the embedded firmware.
+            These thresholds are shown for reference and cannot be changed from this dashboard.
           </p>
         </Card>
       </div>
