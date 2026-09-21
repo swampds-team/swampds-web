@@ -156,8 +156,9 @@ function runDetection(s, config, dt) {
     const [up, down] = pairs[id];
 
     if (up < config.minFlowLpm) {
-      // no flow to judge (pump off): keep any confirmed leak, drop pending timers
-      segments[id] = { diffPct: 0, abnormalFor: 0, leak: prev.leak };
+      // no flow to judge (pump off): a confirmed leak keeps the numbers that triggered it,
+      // anything still pending is dropped
+      segments[id] = prev.leak ? prev : { diffPct: 0, abnormalFor: 0, leak: false };
       continue;
     }
     const diffPct = (Math.abs(up - down) / up) * 100;

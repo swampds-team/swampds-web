@@ -19,9 +19,10 @@ const LINES = [
 ];
 
 /**
- * @param {{ data: { time: string, F1: number, F2: number, F3: number }[], noCard?: boolean }} props
+ * @param {{ data: { time: string, F1: number, F2: number, F3: number }[], noCard?: boolean, animate?: boolean }} props
+ * Pass animate={false} for fast-updating data so lines don't re-animate on every sample.
  */
-export default function FlowChart({ data, noCard = false }) {
+export default function FlowChart({ data, noCard = false, animate = true }) {
   const chartContent = data.length < MIN_CHART_POINTS ? (
     <ChartPlaceholder />
   ) : (
@@ -64,6 +65,7 @@ export default function FlowChart({ data, noCard = false }) {
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4 }}
+              isAnimationActive={animate}
             />
           ))}
         </LineChart>

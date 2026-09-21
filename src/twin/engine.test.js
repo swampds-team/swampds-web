@@ -121,6 +121,14 @@ test('confirmed leak cuts the pump in the same tick and every output agrees', ()
   assert.equal(held.status, 'leak');
 });
 
+test('a confirmed leak keeps its measured difference after the pump is cut', () => {
+  const { state } = runUntil(setValve(runningPump(), 'A', 100), (x) => x.latched);
+  const held = run(state, 10);
+  assert.ok(held.segments.A.diffPct > CFG.tolerancePct);
+  assert.ok(held.segments.A.abnormalFor >= CFG.persistSec);
+  assert.equal(held.segments.A.leak, true);
+});
+
 test('leak protection overrides manual mode', () => {
   let s = setManualCommand(setMode(runningPump(), 'manual'), 'on');
   s = run(s, 2);

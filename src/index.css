@@ -13,3 +13,23 @@ body {
   background-color: var(--color-background);
   color: #1f2937;
 }
+
+/* ── Digital twin schematic animation ── */
+@keyframes twin-flow {
+  to { stroke-dashoffset: -28; }
+}
+@keyframes twin-drip {
+  0%   { transform: translateY(0);    opacity: 0.9; }
+  100% { transform: translateY(26px); opacity: 0;   }
+}
+@keyframes twin-beep {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%      { transform: scale(1.25); opacity: 0.6; }
+}
+.twin-flow { animation: twin-flow 0.7s linear infinite; }
+.twin-drip { animation: twin-drip 0.9s ease-in infinite; }
+.twin-beep { animation: twin-beep 0.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .twin-flow, .twin-drip, .twin-beep { animation: none; }
+}

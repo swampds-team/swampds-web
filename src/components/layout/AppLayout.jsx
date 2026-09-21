@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -110,7 +110,10 @@ export default function AppLayout() {
           onMenuClick={() => setSidebarOpen(prev => !prev)}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Outlet />
+          {/* Keep the sidebar/top bar on screen while a lazy page loads */}
+          <Suspense fallback={<div className="p-6 text-sm text-slate-400">Loading…</div>}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
