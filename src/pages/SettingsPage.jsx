@@ -40,8 +40,8 @@ export default function SettingsPage() {
         <div className="flex items-start gap-2 p-3 mt-5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs sm:text-sm">
           <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>
-            These values are read-only. They are set in the embedded firmware, which is what the
-            hardware acts on. To change them, update the firmware.
+            These values are read-only. This dashboard only displays them - changing them here
+            would not change what the pump control acts on.
           </span>
         </div>
       </Card>

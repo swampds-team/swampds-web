@@ -50,11 +50,13 @@ export default function WaterLevelPage() {
           <CardHeader title="Last Sensor Update" />
           <div className="text-xl sm:text-2xl font-bold text-slate-800 mt-2">{lastUpdatedStr}</div>
           <div className="text-sm text-slate-500 mt-1">
-            {new Date(lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {lastUpdated
+              ? new Date(lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              : 'No timestamp reported'}
           </div>
           <div className="text-xs text-green-600 font-semibold mt-3 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-            Live data - updates every 3 s
+            Live data
           </div>
         </Card>
 
@@ -63,7 +65,7 @@ export default function WaterLevelPage() {
           <CardHeader title="Auto-Control Thresholds" />
           <p className="text-xs text-slate-400 mb-4">
             In <strong>Auto</strong> mode the pump starts/stops at these levels automatically.
-            Set in the embedded firmware.
+            Shown for reference; not editable from this dashboard.
           </p>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
