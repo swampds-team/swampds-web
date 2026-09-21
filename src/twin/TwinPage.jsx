@@ -11,6 +11,7 @@ import {
   ExternalLink,
   ShieldAlert,
   FlaskConical,
+  Radio,
 } from 'lucide-react';
 
 import { Card, CardHeader } from '../components/Card';
@@ -30,6 +31,18 @@ import DetectionPanel from './DetectionPanel.jsx';
 import DemoGuide from './DemoGuide.jsx';
 import EventLog from './EventLog.jsx';
 import ReportModal from './ReportModal.jsx';
+import BridgeModal from './BridgeModal.jsx';
+import { useFirebaseBridge } from './useFirebaseBridge.js';
+
+const LINK_LABEL = {
+  off: 'Dashboard link', loading: 'Connecting…', connecting: 'Connecting…', signin: 'Sign in',
+  live: 'Dashboard: live', locked: 'Dashboard: busy', displaced: 'Dashboard: stopped', error: 'Dashboard: error',
+};
+const LINK_DOT = {
+  off: 'bg-slate-400', live: 'bg-emerald-500', error: 'bg-rose-500',
+  loading: 'bg-blue-400 animate-pulse', connecting: 'bg-blue-400 animate-pulse',
+  signin: 'bg-amber-400', locked: 'bg-amber-400', displaced: 'bg-amber-400',
+};
 
 const THEME_KEY = 'swampds_theme';
 
@@ -54,6 +67,14 @@ function saveTheme(dark) {
 export default function TwinPage() {
   const twin = useTwin();
   const { sim, config, startedAt, setValve, setManualCommand } = twin;
+
+  // Optional link to the operator dashboard (Firebase). Nothing is loaded until the user connects.
+  const bridge = useFirebaseBridge({
+    sim,
+    config,
+    actions: { setMode: twin.setMode, setManualCommand: twin.setManualCommand },
+  });
+  const [linkOpen, setLinkOpen] = useState(false);
 
   const [soundOn, setSoundOn] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
@@ -136,7 +157,7 @@ export default function TwinPage() {
             {/* Audio Toggle */}
             <button
               onClick={() => setSoundOn((v) => !v)}
-              className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="hidden sm:block p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title={soundOn ? 'Mute buzzer' : 'Unmute buzzer'}
               aria-label="Toggle audio"
             >
@@ -151,6 +172,17 @@ export default function TwinPage() {
               aria-label="Toggle theme"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Link to the operator dashboard */}
+            <button
+              onClick={() => setLinkOpen(true)}
+              aria-label={`Dashboard link: ${LINK_LABEL[bridge.status.state] ?? ''}`}
+              className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            >
+              <span className={`w-2 h-2 rounded-full ${LINK_DOT[bridge.status.state] ?? 'bg-slate-400'}`} />
+              <Radio className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline whitespace-nowrap">{LINK_LABEL[bridge.status.state] ?? 'Dashboard link'}</span>
             </button>
 
             {/* Export Report */}
@@ -250,6 +282,8 @@ export default function TwinPage() {
       </main>
 
       {/* ── Report Modal ── */}
+      <BridgeModal open={linkOpen} onClose={() => setLinkOpen(false)} bridge={bridge} />
+
       <ReportModal
         open={reportOpen}
         onClose={() => setReportOpen(false)}

@@ -1,0 +1,187 @@
+/**
+ * @fileoverview Connects the digital twin to Firebase so it stands in for the ESP32:
+ * it publishes sensor/status/alert/history data, and obeys the dashboard's commands.
+ *
+ * Framework-free. The Firebase functions are injected (`api`), so the same code runs
+ * against the real SDK in the browser and an in-memory fake in tests.
+ * See contract.js for the exact data layout.
+ */
+
+import {
+  toSnapshot, flatten, shouldPublishEvent, eventToAlert,
+  createPumpTracker, trackPump, controlIntents, canAcquireLock,
+  PUBLISH_INTERVAL_MS,
+} from './contract.js';
+
+const norm = (v) => (typeof v === 'string' ? v.toLowerCase() : null);
+
+/**
+ * @param {{
+ *   api: object,                          firebase/database functions (ref, update, push, ...)
+ *   db: object,
+ *   clientId: string,                     unique per browser tab
+ *   identity: { uid: string, email: string },
+ *   getSim: () => object,                 latest engine state
+ *   getConfig: () => object,
+ *   applyIntent: (intent: object) => void,   apply a dashboard command to the twin
+ *   onStatus: (status: object) => void,
+ *   now?: () => number,
+ *   setIntervalFn?: Function, clearIntervalFn?: Function,
+ * }} deps
+ */
+export function createBridge(deps) {
+  const {
+    api, db, clientId, identity, getSim, getConfig, applyIntent, onStatus,
+    now = Date.now, setIntervalFn = setInterval, clearIntervalFn = clearInterval,
+  } = deps;
+  const { ref, update, push, remove, onValue, runTransaction, onDisconnect } = api;
+
+  const lockRef = ref(db, 'twinLock');
+  const root = () => ref(db);
+
+  let running = false;
+  let publishing = false;
+  let timer = null;
+  let unsubs = [];
+  let lastEventId = 0;
+  let tracker = createPumpTracker();
+  let offlineHandler = null;
+  const dbControl = { mode: null, cmd: null }; // what the database currently holds
+
+  const status = (state, extra = {}) => onStatus({ state, ...extra });
+
+  async function fail(error) {
+    status('error', { message: error?.message ?? String(error) });
+    await stop({ silent: true });
+  }
+
+  // ── lifecycle ────────────────────────────────────────────────────────────────
+
+  /**
+   * Take the lock and start publishing.
+   * @param {{ force?: boolean, clearPrevious?: boolean }} [options]
+   * @returns {Promise<boolean>} false if another twin holds the lock
+   */
+  async function start({ force = false, clearPrevious = false } = {}) {
+    status('connecting');
+    try {
+      const t = now();
+      const { committed, snapshot } = await runTransaction(lockRef, (current) =>
+        canAcquireLock(current, { now: t, clientId, force })
+          ? { clientId, uid: identity.uid, email: identity.email, since: t, heartbeat: t }
+          : undefined);
+
+      if (!committed) {
+        status('locked', { lockedBy: snapshot.val()?.email ?? 'another twin' });
+        return false;
+      }
+
+      const sim = getSim();
+      lastEventId = sim.seq;                                   // don't replay history from before connecting
+      tracker = trackPump(createPumpTracker(), sim.pumpOn, t).tracker;
+
+      // The twin boots as the device: it reports its own mode, then listens for commands.
+      await update(root(), { 'status/controlMode': sim.mode, 'control/pumpCommand': sim.manualCommand });
+      if (clearPrevious) {
+        await remove(ref(db, 'alerts'));
+        await remove(ref(db, 'pumpHistory'));
+      }
+
+      offlineHandler = onDisconnect(ref(db, 'system/online'));
+      await offlineHandler.set(false);
+
+      unsubs = [
+        onValue(ref(db, 'status/controlMode'), (snap) => {
+          dbControl.mode = norm(snap.val());
+          if (running) controlIntents(getSim(), { controlMode: snap.val() }).forEach(applyIntent);
+        }),
+        onValue(ref(db, 'control/pumpCommand'), (snap) => {
+          dbControl.cmd = norm(snap.val());
+          if (running) controlIntents(getSim(), { pumpCommand: snap.val() }).forEach(applyIntent);
+        }),
+        onValue(lockRef, (snap) => {
+          const lock = snap.val();
+          if (running && lock && lock.clientId !== clientId) {
+            status('displaced', { lockedBy: lock.email ?? 'another twin' });
+            stop({ release: false, silent: true });
+          }
+        }),
+      ];
+
+      running = true;
+      await publish();
+      timer = setIntervalFn(() => { publish().catch(fail); }, PUBLISH_INTERVAL_MS);
+      return true;
+    } catch (error) {
+      await fail(error);
+      return false;
+    }
+  }
+
+  /**
+   * Stop publishing and mark the data source offline.
+   * @param {{ release?: boolean, silent?: boolean }} [options]
+   */
+  async function stop({ release = true, silent = false } = {}) {
+    const wasRunning = running;
+    running = false;
+    if (timer) clearIntervalFn(timer);
+    timer = null;
+    unsubs.forEach((unsubscribe) => unsubscribe());
+    unsubs = [];
+
+    if (wasRunning && release) {
+      try {
+        await runTransaction(lockRef, (current) => (current?.clientId === clientId ? null : undefined));
+        await update(root(), { 'system/online': false });
+      } catch { /* best effort: onDisconnect / lock expiry cover a failed cleanup */ }
+    }
+    // Always cancel: a displaced twin must not flip the new owner's "online" flag when it closes.
+    try { await offlineHandler?.cancel(); } catch { /* ignore */ }
+    offlineHandler = null;
+    if (!silent) status('off');
+  }
+
+  // ── publishing ───────────────────────────────────────────────────────────────
+
+  async function publish() {
+    if (!running || publishing) return;
+    publishing = true;
+    try {
+      const t = now();
+      const sim = getSim();
+
+      const updates = flatten(toSnapshot(sim, getConfig(), t));
+      updates['twinLock/heartbeat'] = t;
+      await update(root(), updates);
+
+      if (sim.seq < lastEventId) lastEventId = 0;             // the twin was restarted: its event ids began again
+      const fresh = sim.events.filter((e) => e.id > lastEventId).reverse(); // oldest first
+      lastEventId = sim.seq;
+      let offset = 0;
+      for (const event of fresh) {
+        if (shouldPublishEvent(event)) await push(ref(db, 'alerts'), eventToAlert(event, t + offset++));
+      }
+
+      const result = trackPump(tracker, sim.pumpOn, t);
+      tracker = result.tracker;
+      if (result.session) await push(ref(db, 'pumpHistory'), result.session);
+
+      status('live', { lastPublishAt: t });
+    } finally {
+      publishing = false;
+    }
+  }
+
+  /** Call whenever the twin's own mode / manual command changes: mirror it to the database. */
+  function syncControlOut() {
+    if (!running) return;
+    const sim = getSim();
+    const updates = {};
+    if (dbControl.mode !== sim.mode) updates['status/controlMode'] = sim.mode;
+    if (dbControl.cmd !== sim.manualCommand) updates['control/pumpCommand'] = sim.manualCommand;
+    if (Object.keys(updates).length > 0) update(root(), updates).catch(fail);
+  }
+
+  return { start, stop, syncControlOut, publishNow: publish, isRunning: () => running };
+}

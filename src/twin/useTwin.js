@@ -35,8 +35,8 @@ export function useTwin() {
   }, [notice]);
 
   const setValve         = useCallback((id, pct) => setSim((s) => engine.setValve(s, id, pct)), []);
-  const setMode          = useCallback((mode) => setSim((s) => engine.setMode(s, mode)), []);
-  const setManualCommand = useCallback((cmd) => setSim((s) => engine.setManualCommand(s, cmd)), []);
+  const setMode          = useCallback((mode, origin) => setSim((s) => engine.setMode(s, mode, origin)), []);
+  const setManualCommand = useCallback((cmd, origin) => setSim((s) => engine.setManualCommand(s, cmd, origin)), []);
   const refillSource     = useCallback(() => setSim((s) => engine.refillSource(s)), []);
   const emptyDelivery    = useCallback(() => setSim((s) => engine.emptyDelivery(s)), []);
 

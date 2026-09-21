@@ -15,6 +15,7 @@ export const DEFAULT_CONFIG = {
   maxLeakFraction: 0.6,    // share of upstream flow lost with a valve 100% open
   sourceCapacityL: 12,     // small demo tanks so a full cycle fits in a demo
   deliveryCapacityL: 6,
+  deliveryHeightCm: 30,    // only used to report a water depth (cm) to the dashboard
 
   // ── Sensors ─────────────────────────────────────────────────────────────
   noisePct: 1.5,           // random reading noise, +/- percent

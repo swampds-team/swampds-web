@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar  from './TopBar';
+import DataSourceBanner from './DataSourceBanner';
 import { useSwampdsData } from '../../data/swampdsData';
 
 const NAV_ITEMS = [
@@ -42,7 +43,7 @@ const ROUTE_TITLES = {
  */
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const { alerts, status, loaded } = useSwampdsData();
+  const { alerts, status, loaded, meta } = useSwampdsData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Automatically close mobile drawer whenever the user navigates
@@ -112,6 +113,7 @@ export default function AppLayout() {
           alertCount={alertCount}
           onMenuClick={() => setSidebarOpen(prev => !prev)}
         />
+        <DataSourceBanner meta={meta} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {/* Keep the sidebar/top bar on screen while a lazy page loads */}
           <Suspense fallback={<div className="p-6 text-sm text-slate-400">Loading…</div>}>

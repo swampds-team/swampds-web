@@ -38,6 +38,9 @@ const initialData = {
   control: { pumpCommand: 'off' },
   alerts:  [],
   loaded:  false, // true once the first real Firebase snapshot has arrived
+  // Where the data comes from. `receivedAt` is the LOCAL time the heartbeat (sensors/lastUpdated)
+  // last changed, so staleness does not depend on the publisher's clock being right.
+  meta:    { source: null, online: null, lastUpdated: null, receivedAt: null },
 };
 
 let _store = { ...initialData };
@@ -74,12 +77,24 @@ onValue(ref(db, '/'), (snap) => {
     controlMode:  backendStatus.controlMode?.toLowerCase() ?? initialData.status.controlMode,
   };
 
+  const beat = val.sensors?.lastUpdated ?? null;
+  const prev = _store.meta ?? initialData.meta;
+  const meta = {
+    source:      val.system?.source ?? null,
+    online:      val.system?.online ?? null,
+    lastUpdated: beat,
+    receivedAt:  beat === null
+      ? null
+      : (beat !== prev.lastUpdated || prev.receivedAt === null ? Date.now() : prev.receivedAt),
+  };
+
   _notify({
     sensors: val.sensors ?? initialData.sensors,
     status:  mappedStatus,
     control: val.control ?? initialData.control,
     alerts,
     loaded: true,
+    meta,
   });
 
   if (val.sensors) _recordSample(val.sensors);
