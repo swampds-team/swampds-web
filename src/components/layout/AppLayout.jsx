@@ -39,7 +39,7 @@ const ROUTE_TITLES = {
  */
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const { alerts, status } = useSwampdsData();
+  const { alerts, status, loaded } = useSwampdsData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Automatically close mobile drawer whenever the user navigates
@@ -57,10 +57,14 @@ export default function AppLayout() {
   // Fire a browser notification when systemStatus worsens
   const prevStatusRef = React.useRef(null);
   useEffect(() => {
+    // Wait for the first real Firebase snapshot - the placeholder 'normal' state
+    // would otherwise look like a change and fire a false notification on load
+    if (!loaded) return;
+
     const current = status?.systemStatus;
     const prev    = prevStatusRef.current;
 
-    // Skip the very first render (no previous state yet)
+    // First real snapshot: record it as the baseline, don't notify
     if (prev === null) {
       prevStatusRef.current = current;
       return;
@@ -86,7 +90,7 @@ export default function AppLayout() {
         }
       }
     }
-  }, [status?.systemStatus]);
+  }, [loaded, status?.systemStatus]);
 
   const pageTitle  = ROUTE_TITLES[pathname] ?? 'SWAMPDS';
   const alertCount = alerts.filter(a => a.severity === 'critical').length;

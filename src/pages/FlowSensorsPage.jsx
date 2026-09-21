@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Activity, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Card, CardHeader } from '../components/Card';
+import ChartPlaceholder, { MIN_CHART_POINTS } from '../components/dashboard/ChartPlaceholder';
 import { useSwampdsData, useChartHistory } from '../data/swampdsData';
 
 // Expected operating range for each flow sensor
@@ -72,6 +73,9 @@ function SensorSection({ sensorKey, dataKey, label, color, desc, value, chartDat
           </span>
         </div>
       </div>
+      {chartData.length < MIN_CHART_POINTS ? (
+        <ChartPlaceholder className="h-44 sm:h-48" />
+      ) : (
       <div className="h-44 sm:h-48 text-xs">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 15, left: -10, bottom: 0 }}>
@@ -85,6 +89,7 @@ function SensorSection({ sensorKey, dataKey, label, color, desc, value, chartDat
           </LineChart>
         </ResponsiveContainer>
       </div>
+      )}
     </Card>
   );
 }
@@ -197,7 +202,7 @@ export default function FlowSensorsPage() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-4">
-            Thresholds can be adjusted in Settings once Firebase persistence is wired in.
+            Detection thresholds are set in the embedded firmware.
           </p>
         </Card>
       </div>

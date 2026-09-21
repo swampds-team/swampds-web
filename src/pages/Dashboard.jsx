@@ -10,9 +10,9 @@ import FlowChart           from '../components/dashboard/FlowChart';
 import AlertsPanel         from '../components/dashboard/AlertsPanel';
 
 const FLOW_SENSORS = [
-  { key: 'flow1', title: 'Flow Sensor 1', sublabel: 'Inlet',    color: '#10b981', iconColorClass: 'text-emerald-500' },
-  { key: 'flow2', title: 'Flow Sensor 2', sublabel: 'Midpoint', color: '#f59e0b', iconColorClass: 'text-amber-500'   },
-  { key: 'flow3', title: 'Flow Sensor 3', sublabel: 'Outlet',   color: '#a855f7', iconColorClass: 'text-purple-500'  },
+  { key: 'flow1', historyKey: 'F1', title: 'Flow Sensor 1', sublabel: 'Inlet',    color: '#10b981', iconColorClass: 'text-emerald-500' },
+  { key: 'flow2', historyKey: 'F2', title: 'Flow Sensor 2', sublabel: 'Midpoint', color: '#f59e0b', iconColorClass: 'text-amber-500'   },
+  { key: 'flow3', historyKey: 'F3', title: 'Flow Sensor 3', sublabel: 'Outlet',   color: '#a855f7', iconColorClass: 'text-purple-500'  },
 ];
 
 export default function Dashboard() {
@@ -33,7 +33,7 @@ export default function Dashboard() {
         <WaterLevelCard percent={sensors.waterLevelPercent} cm={sensors.waterLevelCm} />
 
         {FLOW_SENSORS.map(({ key, ...props }) => (
-          <FlowSensorCard key={key} value={sensors[key]} {...props} />
+          <FlowSensorCard key={key} value={sensors[key]} history={flowData} {...props} />
         ))}
 
         <div className="sm:col-span-2 lg:col-span-1">

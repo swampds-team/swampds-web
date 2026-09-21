@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader } from '../Card';
+import ChartPlaceholder, { MIN_CHART_POINTS } from './ChartPlaceholder';
 
 const TOOLTIP_STYLE = {
   borderRadius: '8px',
@@ -20,7 +21,9 @@ const TOOLTIP_STYLE = {
  * @param {{ data: { time: string, level: number }[], noCard?: boolean }} props
  */
 export default function WaterLevelChart({ data, noCard = false }) {
-  const chartContent = (
+  const chartContent = data.length < MIN_CHART_POINTS ? (
+    <ChartPlaceholder />
+  ) : (
     <div className="h-64 sm:h-72 mt-4 text-xs">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>

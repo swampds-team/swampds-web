@@ -4,6 +4,7 @@ import {
   Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader } from '../Card';
+import ChartPlaceholder, { MIN_CHART_POINTS } from './ChartPlaceholder';
 
 const TOOLTIP_STYLE = {
   borderRadius: '8px',
@@ -21,7 +22,9 @@ const LINES = [
  * @param {{ data: { time: string, F1: number, F2: number, F3: number }[], noCard?: boolean }} props
  */
 export default function FlowChart({ data, noCard = false }) {
-  const chartContent = (
+  const chartContent = data.length < MIN_CHART_POINTS ? (
+    <ChartPlaceholder />
+  ) : (
     <div className="h-64 sm:h-72 mt-4 text-xs">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
@@ -72,7 +75,7 @@ export default function FlowChart({ data, noCard = false }) {
 
   return (
     <Card>
-      <CardHeader title="Flow Rate Overview (24 h)" />
+      <CardHeader title="Flow Rate Trend" />
       {chartContent}
     </Card>
   );

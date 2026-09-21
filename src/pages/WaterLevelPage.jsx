@@ -3,10 +3,7 @@ import { Droplets, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardHeader } from '../components/Card';
 import { WaterLevelIndicator } from '../components/WaterLevelIndicator';
 import WaterLevelChart from '../components/dashboard/WaterLevelChart';
-import { useSwampdsData, useChartHistory } from '../data/swampdsData';
-
-// Must match the auto-pump thresholds in swampdsData.js
-const THRESHOLDS = { low: 20, full: 95 };
+import { useSwampdsData, useChartHistory, PUMP_THRESHOLDS as THRESHOLDS } from '../data/swampdsData';
 
 export default function WaterLevelPage() {
   const { sensors } = useSwampdsData();
@@ -66,7 +63,7 @@ export default function WaterLevelPage() {
           <CardHeader title="Auto-Control Thresholds" />
           <p className="text-xs text-slate-400 mb-4">
             In <strong>Auto</strong> mode the pump starts/stops at these levels automatically.
-            Adjust in Settings.
+            Set in the embedded firmware.
           </p>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
@@ -89,7 +86,7 @@ export default function WaterLevelPage() {
 
       {/* Full-width trend chart */}
       <Card>
-        <CardHeader title="Water Level - Last 24 Hours" />
+        <CardHeader title="Water Level Trend" />
         <WaterLevelChart data={waterLevelData} noCard />
       </Card>
 

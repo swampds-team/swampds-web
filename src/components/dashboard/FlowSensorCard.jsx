@@ -5,15 +5,7 @@ import { Sparkline } from '../Sparkline';
 
 const NORMAL_RANGE = { min: 4.4, max: 5.3 }; // L/min
 
-/**
- * Builds a short sparkline from a single current reading,
- * with tight noise appropriate for flow rate values (~4.8 L/min).
- */
-function buildSparkline(value) {
-  return Array.from({ length: 12 }, (_, i) => ({
-    val: +(value + Math.sin(i * 0.8) * 0.05 + (Math.random() * 0.04 - 0.02)).toFixed(2),
-  }));
-}
+const SPARKLINE_POINTS = 30;
 
 /**
  * @param {{
@@ -22,10 +14,17 @@ function buildSparkline(value) {
  *   sublabel: string,
  *   color: string,
  *   iconColorClass: string,
+ *   history: object[],
+ *   historyKey: string,
  * }} props
+ * `history` is the recorded flow series from useChartHistory(); `historyKey` picks
+ * this sensor's column (F1/F2/F3).
  */
-export default function FlowSensorCard({ title, value, sublabel, color, iconColorClass }) {
-  const sparkData = useMemo(() => buildSparkline(value ?? 0), [value]);
+export default function FlowSensorCard({ title, value, sublabel, color, iconColorClass, history = [], historyKey }) {
+  const sparkData = useMemo(
+    () => history.slice(-SPARKLINE_POINTS).map(p => ({ val: p[historyKey] })),
+    [history, historyKey],
+  );
   const isNormal  = value >= NORMAL_RANGE.min && value <= NORMAL_RANGE.max;
 
   return (
@@ -41,7 +40,9 @@ export default function FlowSensorCard({ title, value, sublabel, color, iconColo
           {isNormal ? '· Normal' : '· Diverged'}
         </span>
       </div>
-      <Sparkline data={sparkData} dataKey="val" color={color} />
+      {sparkData.length >= 2
+        ? <Sparkline data={sparkData} dataKey="val" color={color} />
+        : <div className="h-12 mt-2" aria-hidden="true" />}
     </Card>
   );
 }

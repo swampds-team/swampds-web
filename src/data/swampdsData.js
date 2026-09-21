@@ -4,6 +4,7 @@
  * PUBLIC API:
  *   useSwampdsData()     → live sensor + status + alerts snapshot
  *   useChartHistory()    → { flowData, waterLevelData } for trend charts
+ *                          (built from real readings recorded as they arrive)
  *   sendPumpCommand(cmd) → write "on" | "off" to the pump command
  *   setControlMode(mode) → write "auto" | "manual" to the control mode
  *   usePumpHistory()     → historical pump on/off event log
@@ -19,9 +20,11 @@
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 import { app } from '../firebase/firebaseConfig';
-import { getFlowChartData, getWaterLevelChartData } from './mockHistory';
 
 const db = getDatabase(app);
+
+/** Auto-pump thresholds (% water level). Enforced by the firmware; the web app only displays them. */
+export const PUMP_THRESHOLDS = { low: 20, full: 95 };
 
 // ── Live store (populated by Firebase onValue) ────────────────────────────────
 
@@ -34,6 +37,7 @@ const initialData = {
   status:  { systemStatus: 'normal', pumpStatus: 'off', controlMode: 'auto' },
   control: { pumpCommand: 'off' },
   alerts:  [],
+  loaded:  false, // true once the first real Firebase snapshot has arrived
 };
 
 let _store = { ...initialData };
@@ -75,8 +79,65 @@ onValue(ref(db, '/'), (snap) => {
     status:  mappedStatus,
     control: val.control ?? initialData.control,
     alerts,
+    loaded: true,
   });
+
+  if (val.sensors) _recordSample(val.sensors);
 });
+
+// ── Chart history (recorded from the live stream) ─────────────────────────────
+// Firebase only holds the latest sensor values, so trend data is built here:
+// one sample per SAMPLE_INTERVAL_MS, kept for 24 h, persisted in localStorage
+// so a page reload does not wipe the charts. Only records while the app is open.
+
+const HISTORY_KEY        = 'swampds.history.v1';
+const HISTORY_WINDOW_MS  = 24 * 60 * 60 * 1000;
+const SAMPLE_INTERVAL_MS = 30 * 1000;
+
+const _timeLabel = (ts) =>
+  new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+const _deriveCharts = (samples) => ({
+  flowData:       samples.map(s => ({ time: _timeLabel(s.ts), F1: s.f1, F2: s.f2, F3: s.f3 })),
+  waterLevelData: samples.map(s => ({ time: _timeLabel(s.ts), level: s.level })),
+});
+
+function _loadSamples() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]');
+    const cutoff = Date.now() - HISTORY_WINDOW_MS;
+    return Array.isArray(raw) ? raw.filter(s => Number.isFinite(s?.ts) && s.ts >= cutoff) : [];
+  } catch {
+    return [];
+  }
+}
+
+let _samples = _loadSamples();
+let _charts  = _deriveCharts(_samples);
+const _chartListeners = new Set();
+
+function _recordSample(sensors) {
+  const f1 = Number(sensors.flow1);
+  const f2 = Number(sensors.flow2);
+  const f3 = Number(sensors.flow3);
+  const level = Number(sensors.waterLevelPercent);
+  if (![f1, f2, f3, level].every(Number.isFinite)) return;
+
+  const now  = Date.now();
+  const last = _samples[_samples.length - 1];
+  if (last && now - last.ts < SAMPLE_INTERVAL_MS) return;
+
+  const cutoff = now - HISTORY_WINDOW_MS;
+  _samples = [..._samples.filter(s => s.ts >= cutoff), { ts: now, f1, f2, f3, level }];
+  _charts  = _deriveCharts(_samples);
+  _chartListeners.forEach(fn => fn(_charts));
+
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(_samples));
+  } catch {
+    // storage full or unavailable - charts still work for this session
+  }
+}
 
 // ── PUBLIC HOOKS & COMMANDS ───────────────────────────────────────────────────
 
@@ -95,14 +156,17 @@ export function useSwampdsData() {
 }
 
 /**
- * Subscribe to historical chart data (24 h rolling window).
+ * Subscribe to chart data recorded from live readings (24 h rolling window).
+ * Arrays are empty until the first samples are recorded.
  * @returns {{ flowData: object[], waterLevelData: object[] }}
  */
 export function useChartHistory() {
-  const [history] = useState(() => ({
-    flowData:       getFlowChartData(),
-    waterLevelData: getWaterLevelChartData(),
-  }));
+  const [history, setHistory] = useState(_charts);
+  useEffect(() => {
+    setHistory(_charts);
+    _chartListeners.add(setHistory);
+    return () => _chartListeners.delete(setHistory);
+  }, []);
   return history;
 }
 
