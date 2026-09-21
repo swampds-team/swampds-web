@@ -216,17 +216,22 @@ export function setValve(state, id, percent) {
   return next;
 }
 
-/** Switch between 'auto' and 'manual'. Manual starts from the pump's current state. */
-export function setMode(state, mode) {
+const via = (origin) => (origin ? ` (from ${origin})` : '');
+
+/**
+ * Switch between 'auto' and 'manual'. Manual starts from the pump's current state.
+ * `origin` names where the request came from (e.g. 'dashboard') for the event log.
+ */
+export function setMode(state, mode, origin) {
   if (mode === state.mode) return state;
   const next = { ...state, mode, manualCommand: state.pumpOn ? 'on' : 'off' };
-  return addEvent(next, 'info', 'operator', `Operator switched to ${mode.toUpperCase()} mode.`);
+  return addEvent(next, 'info', 'operator', `Operator switched to ${mode.toUpperCase()} mode${via(origin)}.`);
 }
 
 /** Start or stop the pump. Only honoured in manual mode. */
-export function setManualCommand(state, command) {
+export function setManualCommand(state, command, origin) {
   if (state.mode !== 'manual' || command === state.manualCommand) return state;
-  return addEvent({ ...state, manualCommand: command }, 'info', 'operator', `Operator commanded pump ${command.toUpperCase()}.`);
+  return addEvent({ ...state, manualCommand: command }, 'info', 'operator', `Operator commanded pump ${command.toUpperCase()}${via(origin)}.`);
 }
 
 /**
