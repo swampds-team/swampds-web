@@ -116,7 +116,7 @@ export default function Login() {
                 required
                 autoComplete="email"
                 placeholder="admin@swampds.local"
-                className="w-full px-4 py-3 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-base sm:text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
 
@@ -133,7 +133,7 @@ export default function Login() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-3 pr-12 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-800 text-base sm:text-sm placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
                 <button
                   type="button"

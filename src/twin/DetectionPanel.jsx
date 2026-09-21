@@ -35,7 +35,7 @@ export default function DetectionPanel({ sim, config }) {
                 </div>
 
                 <span
-                  className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
+                  className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full ${
                     isLeak
                       ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                       : isWarning
@@ -60,7 +60,7 @@ export default function DetectionPanel({ sim, config }) {
                   >
                     {s.diffPct.toFixed(1)}%
                   </span>{' '}
-                  <span className="text-[10px] text-slate-400">(&gt;{config.tolerancePct}% limit)</span>
+                  <span className="text-[11px] text-slate-400">(&gt;{config.tolerancePct}% limit)</span>
                 </div>
 
                 <div>
@@ -68,7 +68,7 @@ export default function DetectionPanel({ sim, config }) {
                   <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">
                     {Math.min(s.abnormalFor, config.persistSec).toFixed(1)}s
                   </span>
-                  <span className="text-[10px] text-slate-400"> / {config.persistSec}s</span>
+                  <span className="text-[11px] text-slate-400"> / {config.persistSec}s</span>
                 </div>
               </div>
 

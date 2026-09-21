@@ -32,6 +32,7 @@ import DemoGuide from './DemoGuide.jsx';
 import EventLog from './EventLog.jsx';
 import ReportModal from './ReportModal.jsx';
 import BridgeModal from './BridgeModal.jsx';
+import LiveStrip from './LiveStrip.jsx';
 import { useFirebaseBridge } from './useFirebaseBridge.js';
 
 const LINK_LABEL = {
@@ -42,6 +43,12 @@ const LINK_DOT = {
   off: 'bg-slate-400', live: 'bg-emerald-500', error: 'bg-rose-500',
   loading: 'bg-blue-400 animate-pulse', connecting: 'bg-blue-400 animate-pulse',
   signin: 'bg-amber-400', locked: 'bg-amber-400', displaced: 'bg-amber-400',
+};
+
+const STATUS_LABEL = {
+  normal:  { short: 'Normal',    long: 'Operational' },
+  warning: { short: 'Verifying', long: 'Verifying' },
+  leak:    { short: 'Leak',      long: 'Leak Detected' },
 };
 
 const THEME_KEY = 'swampds_theme';
@@ -111,12 +118,12 @@ export default function TwinPage() {
       <header className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Logo & Status */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
               <Droplets className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2 min-w-0">
-              <span className="font-semibold text-sm tracking-tight text-slate-900 dark:text-white">
+              <span className="hidden min-[360px]:inline flex-shrink-0 font-semibold text-sm tracking-tight text-slate-900 dark:text-white">
                 SWAMPDS
               </span>
               <span className="hidden sm:inline text-slate-400 dark:text-slate-600 text-xs">/</span>
@@ -127,7 +134,7 @@ export default function TwinPage() {
 
             {/* Subtle Live Status Pill */}
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap ${
+              className={`inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap ${
                 sim.status === 'leak'
                   ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                   : sim.status === 'warning'
@@ -144,11 +151,8 @@ export default function TwinPage() {
                     : 'bg-emerald-500'
                 }`}
               />
-              {sim.status === 'leak'
-                ? 'Leak Detected'
-                : sim.status === 'warning'
-                ? 'Verifying'
-                : 'Operational'}
+              <span className="sm:hidden">{(STATUS_LABEL[sim.status] ?? STATUS_LABEL.normal).short}</span>
+              <span className="hidden sm:inline">{(STATUS_LABEL[sim.status] ?? STATUS_LABEL.normal).long}</span>
             </span>
           </div>
 
@@ -167,7 +171,7 @@ export default function TwinPage() {
             {/* Dark / Light Toggle */}
             <button
               onClick={() => setDarkMode((v) => !v)}
-              className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-label="Toggle theme"
             >
@@ -178,7 +182,7 @@ export default function TwinPage() {
             <button
               onClick={() => setLinkOpen(true)}
               aria-label={`Dashboard link: ${LINK_LABEL[bridge.status.state] ?? ''}`}
-              className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 min-h-10 px-2.5 sm:px-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
               <span className={`w-2 h-2 rounded-full ${LINK_DOT[bridge.status.state] ?? 'bg-slate-400'}`} />
               <Radio className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -197,7 +201,7 @@ export default function TwinPage() {
             {/* Link to Authenticated Portal */}
             <Link
               to="/login"
-              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1"
+              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white min-w-10 min-h-10 justify-center px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:flex items-center gap-1"
             >
               <span className="hidden sm:inline">Operator Login</span>
               <ExternalLink className="w-3.5 h-3.5 opacity-60" aria-label="Operator login" />
@@ -207,7 +211,8 @@ export default function TwinPage() {
       </header>
 
       {/* ── Main Layout Workspace ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+        <LiveStrip sim={sim} />
         <p className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] sm:text-xs text-amber-800 dark:text-amber-300">
           <FlaskConical className="w-3.5 h-3.5 flex-shrink-0" />
           <span>
@@ -234,7 +239,7 @@ export default function TwinPage() {
             </div>
             <button
               onClick={twin.acknowledgeReset}
-              className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
+              className="px-3.5 py-2 min-h-[40px] rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
             >
               Reset
             </button>

@@ -74,7 +74,7 @@ export default function AlertsPage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors min-h-[36px] flex items-center ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-colors min-h-[40px] flex items-center ${
                   filter === f
                     ? 'bg-white text-slate-800 shadow-xs font-bold'
                     : 'text-slate-500 hover:text-slate-700'

@@ -48,7 +48,7 @@ export default function ControlPanel({ twin }) {
             <button
               key={p.id}
               onClick={() => p.apply(twin)}
-              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              className="px-3 py-2 min-h-[40px] text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               {p.title}
             </button>
@@ -75,7 +75,8 @@ export default function ControlPanel({ twin }) {
                   max="100"
                   value={val}
                   onChange={(e) => setValve(id, Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg accent-blue-600 cursor-pointer"
+                  className="twin-range"
+                  style={{ '--pct': `${val}%`, '--fill': '#d97706' }}
                   aria-label={`Valve ${id} opening percentage`}
                 />
               </div>
@@ -94,7 +95,7 @@ export default function ControlPanel({ twin }) {
           <button
             onClick={acknowledgeReset}
             disabled={!sim.latched}
-            className={`w-full py-2.5 px-4 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors ${
+            className={`w-full py-3 min-h-[44px] px-4 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
               sim.latched
                 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
@@ -134,13 +135,13 @@ export default function ControlPanel({ twin }) {
           <div className="flex items-center gap-2">
             <button
               onClick={refillSource}
-              className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="px-3 py-2 min-h-[40px] text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Refill Source
             </button>
             <button
               onClick={emptyDelivery}
-              className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="px-3 py-2 min-h-[40px] text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Empty Delivery
             </button>
@@ -152,7 +153,7 @@ export default function ControlPanel({ twin }) {
           <button
             type="button"
             onClick={() => setCalOpen((v) => !v)}
-            className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            className="w-full min-h-[44px] flex items-center justify-between text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
           >
             <span>Algorithm Thresholds</span>
             {calOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -170,7 +171,8 @@ export default function ControlPanel({ twin }) {
                   max="30"
                   value={config.tolerancePct}
                   onChange={(e) => updateConfig({ tolerancePct: Number(e.target.value) })}
-                  className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg accent-blue-600"
+                  className="twin-range"
+                  style={{ '--pct': `${((config.tolerancePct - 2) / (30 - 2)) * 100}%` }}
                 />
               </div>
 
@@ -185,7 +187,8 @@ export default function ControlPanel({ twin }) {
                   step="0.5"
                   value={config.persistSec}
                   onChange={(e) => updateConfig({ persistSec: Number(e.target.value) })}
-                  className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg accent-blue-600"
+                  className="twin-range"
+                  style={{ '--pct': `${((config.persistSec - 1) / (10 - 1)) * 100}%` }}
                 />
               </div>
 
