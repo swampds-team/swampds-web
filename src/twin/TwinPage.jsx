@@ -247,7 +247,7 @@ export default function TwinPage() {
         )}
 
         {/* ── Vector Pipeline Schematic ── */}
-        <Card className="border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <Card className="p-3 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <CardHeader
             title="Pipeline Architecture"
             icon={Workflow}
@@ -255,7 +255,7 @@ export default function TwinPage() {
           />
           <PipelineSchematic
             sim={sim}
-            horizontal={wide}
+            layout={wide ? 'full' : 'compact'}
             onToggleValve={(id, pct) => setValve(id, pct)}
             onTogglePump={() =>
               sim.mode === 'manual' &&
