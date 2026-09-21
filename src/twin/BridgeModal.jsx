@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Radio, X, LogIn, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 
 const INPUT =
-  'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 ' +
-  'text-sm text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500';
+  'w-full px-3 py-2 min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 ' +
+  'text-base sm:text-sm text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500'; // 16px on phones: smaller text makes iOS zoom in
 const PRIMARY =
-  'px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer disabled:opacity-50';
+  'px-4 py-2 min-h-[44px] rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer disabled:opacity-50';
 const SECONDARY =
-  'px-4 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 ' +
+  'px-4 py-2 min-h-[44px] rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 ' +
   'hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer';
 
 function Notice({ tone, icon: Icon, children }) {
@@ -133,9 +134,9 @@ export default function BridgeModal({ open, onClose, bridge }) {
             pump history to Firebase, and obeys the dashboard's mode and pump commands. Firebase is only loaded if you
             connect.
           </p>
-          <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+          <label className="flex items-start gap-3 min-h-[44px] text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
             <input type="checkbox" checked={clearPrevious} onChange={(e) => setClearPrevious(e.target.checked)}
-              className="mt-0.5" />
+              className="mt-0.5 w-5 h-5 flex-shrink-0" />
             <span>Start with a clean slate: clear the dashboard's existing alerts and pump history.</span>
           </label>
           <button onClick={() => connect({ clearPrevious })} className={PRIMARY}>Connect</button>
@@ -154,11 +155,18 @@ export default function BridgeModal({ open, onClose, bridge }) {
             <Radio className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="font-semibold text-sm">Dashboard link</span>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <button onClick={onClose} aria-label="Close" className="w-10 h-10 -m-2 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-4 space-y-4">{body}</div>
+        <div className="p-4 space-y-4">
+          {body}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+            <Link to="/login" className="inline-flex items-center min-h-[40px] text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+              Open the operator dashboard &rarr;
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -124,8 +124,9 @@ export default function HardwarePanel({ outputs, soundOn, onToggleSound }) {
             </span>
             <button
               onClick={onToggleSound}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              className="w-10 h-10 -my-2 -mr-2 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               title={soundOn ? 'Mute' : 'Unmute'}
+              aria-label={soundOn ? 'Mute buzzer' : 'Unmute buzzer'}
             >
               {soundOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>

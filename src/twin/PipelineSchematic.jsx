@@ -11,8 +11,8 @@ const HORIZONTAL = {
 };
 
 const VERTICAL = {
-  viewBox: '0 0 320 860',
-  at: (i) => ({ x: 75, y: 55 + i * 105 }),
+  viewBox: '0 0 320 540',
+  at: (i) => ({ x: 75, y: 44 + i * 64 }),
 };
 
 const PIPE_SEGMENT = [null, null, 'A', 'A', 'B', 'B', null];
@@ -183,7 +183,7 @@ export default function PipelineSchematic({
           </text>
           {/* Subtle drip if leaking */}
           {leakFlow.A > 0.05 && (
-            <circle cx="0" cy="24" r="3" fill="#0284c7" className="gentle-drip" />
+            <circle cx={horizontal ? 0 : -30} cy={horizontal ? 24 : 0} r="3" fill="#0284c7" className="gentle-drip" />
           )}
         </g>
 
@@ -235,7 +235,7 @@ export default function PipelineSchematic({
           </text>
           {/* Subtle drip if leaking */}
           {leakFlow.B > 0.05 && (
-            <circle cx="0" cy="24" r="3" fill="#0284c7" className="gentle-drip" />
+            <circle cx={horizontal ? 0 : -30} cy={horizontal ? 24 : 0} r="3" fill="#0284c7" className="gentle-drip" />
           )}
         </g>
 

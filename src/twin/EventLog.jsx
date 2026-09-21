@@ -30,10 +30,10 @@ export default function EventLog({ events, startedAt }) {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1 text-[10px] font-mono font-bold">
+        <div className="flex items-center gap-1 text-[11px] font-mono font-bold">
           <button
             onClick={() => setFilter('all')}
-            className={`px-2 py-0.5 rounded-md transition-colors ${
+            className={`px-2.5 py-2 rounded-md transition-colors ${
               filter === 'all'
                 ? 'bg-blue-600 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
@@ -43,7 +43,7 @@ export default function EventLog({ events, startedAt }) {
           </button>
           <button
             onClick={() => setFilter('critical')}
-            className={`px-2 py-0.5 rounded-md transition-colors ${
+            className={`px-2.5 py-2 rounded-md transition-colors ${
               filter === 'critical'
                 ? 'bg-rose-600 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
@@ -53,7 +53,7 @@ export default function EventLog({ events, startedAt }) {
           </button>
           <button
             onClick={() => setFilter('operator')}
-            className={`px-2 py-0.5 rounded-md transition-colors ${
+            className={`px-2.5 py-2 rounded-md transition-colors ${
               filter === 'operator'
                 ? 'bg-purple-600 text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
