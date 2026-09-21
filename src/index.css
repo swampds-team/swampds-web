@@ -1,15 +1,69 @@
 @import "tailwindcss";
 
+/* `dark:` follows a `.dark` class (set on the twin page root), not the OS setting alone. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-primary: #1A56DB;
-  --color-surface: #FFFFFF;
-  --color-background: #F3F4F6;
+  --color-primary: #2563eb;
+  --color-surface: #ffffff;
+  --color-background: #f8fafc;
   --color-danger: #ef4444;
-  --color-warning: #eab308;
-  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
 }
 
 body {
   background-color: var(--color-background);
-  color: #1f2937;
+  color: #0f172a;
+}
+
+/* ── Minimalist Flow & Status Animations ── */
+@keyframes fluid-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes gentle-drip {
+  0%   { transform: translateY(0); opacity: 0.9; }
+  100% { transform: translateY(18px); opacity: 0; }
+}
+
+.fluid-flow     { animation: fluid-flow 0.8s linear infinite; }
+.subtle-pulse   { animation: subtle-pulse 1.8s ease-in-out infinite; }
+.gentle-drip    { animation: gentle-drip 0.9s ease-in infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fluid-flow, .subtle-pulse, .gentle-drip { animation: none; }
+}
+
+/* Recharts draws its grid with inline colours; soften it on dark surfaces */
+.dark .recharts-cartesian-grid line { stroke: #1e293b; }
+
+/* Native controls (range sliders, scrollbars) should follow the twin theme */
+.twin-app.dark { color-scheme: dark; }
+
+/* Printing the session report: show only the report, on white */
+@media print {
+  body { background: #ffffff !important; }
+  .twin-app > *:not(.twin-report) { display: none !important; }
+  .twin-report {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+  .twin-report > div {
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  .twin-report, .twin-report * { color: #000000 !important; background: transparent !important; }
+  .no-print { display: none !important; }
 }

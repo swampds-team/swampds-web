@@ -1,0 +1,262 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Droplets,
+  Workflow,
+  FileText,
+  Sun,
+  Moon,
+  Volume2,
+  VolumeX,
+  ExternalLink,
+  ShieldAlert,
+  FlaskConical,
+} from 'lucide-react';
+
+import { Card, CardHeader } from '../components/Card';
+import FlowChart from '../components/dashboard/FlowChart';
+
+import { useTwin } from './useTwin.js';
+import { useBuzzer } from './useBuzzer.js';
+import { useMediaQuery } from './useMediaQuery.js';
+import { deriveOutputs } from './outputs.js';
+import { SEGMENTS } from './config.js';
+import { formatElapsed } from './format.js';
+
+import PipelineSchematic from './PipelineSchematic.jsx';
+import ControlPanel from './ControlPanel.jsx';
+import HardwarePanel from './HardwarePanel.jsx';
+import DetectionPanel from './DetectionPanel.jsx';
+import DemoGuide from './DemoGuide.jsx';
+import EventLog from './EventLog.jsx';
+import ReportModal from './ReportModal.jsx';
+
+const THEME_KEY = 'swampds_theme';
+
+/** Saved choice if any, otherwise the OS preference. Storage may be blocked, so never throw. */
+function readInitialDark() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) return saved === 'dark';
+  } catch { /* storage unavailable */ }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function saveTheme(dark) {
+  try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch { /* ignore */ }
+}
+
+/**
+ * Modern Minimalist Digital Twin Simulation Page
+ * Dark mode is scoped to this page (a `.dark` class on its root), so it can never leak
+ * into the operator dashboard.
+ */
+export default function TwinPage() {
+  const twin = useTwin();
+  const { sim, config, startedAt, setValve, setManualCommand } = twin;
+
+  const [soundOn, setSoundOn] = useState(true);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(readInitialDark);
+
+  const wide = useMediaQuery('(min-width: 1024px)');
+  const outputs = useMemo(() => deriveOutputs(sim), [sim]);
+  useBuzzer(outputs.buzzer, soundOn);
+
+  useEffect(() => { saveTheme(darkMode); }, [darkMode]);
+
+  const chartData = useMemo(
+    () =>
+      sim.history.map((p) => ({
+        time: formatElapsed(p.t),
+        F1: p.F1,
+        F2: p.F2,
+        F3: p.F3,
+      })),
+    [sim.history],
+  );
+
+  useEffect(() => {
+    const previous = document.title;
+    document.title = 'SWAMPDS Digital Twin';
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  return (
+    <div className={`twin-app ${darkMode ? 'dark' : ''} min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-150`}>
+      {/* ── Modern Minimalist Navigation Bar ── */}
+      <header className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+          {/* Logo & Status */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+              <Droplets className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-sm tracking-tight text-slate-900 dark:text-white">
+                SWAMPDS
+              </span>
+              <span className="hidden sm:inline text-slate-400 dark:text-slate-600 text-xs">/</span>
+              <span className="hidden sm:inline text-xs text-slate-500 dark:text-slate-400 truncate">
+                Digital Twin
+              </span>
+            </div>
+
+            {/* Subtle Live Status Pill */}
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap ${
+                sim.status === 'leak'
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  : sim.status === 'warning'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  sim.status === 'leak'
+                    ? 'bg-rose-500'
+                    : sim.status === 'warning'
+                    ? 'bg-amber-400'
+                    : 'bg-emerald-500'
+                }`}
+              />
+              {sim.status === 'leak'
+                ? 'Leak Detected'
+                : sim.status === 'warning'
+                ? 'Verifying'
+                : 'Operational'}
+            </span>
+          </div>
+
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            {/* Audio Toggle */}
+            <button
+              onClick={() => setSoundOn((v) => !v)}
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title={soundOn ? 'Mute buzzer' : 'Unmute buzzer'}
+              aria-label="Toggle audio"
+            >
+              {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            {/* Dark / Light Toggle */}
+            <button
+              onClick={() => setDarkMode((v) => !v)}
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle theme"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Export Report */}
+            <button
+              onClick={() => setReportOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Report</span>
+            </button>
+
+            {/* Link to Authenticated Portal */}
+            <Link
+              to="/login"
+              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1"
+            >
+              <span className="hidden sm:inline">Operator Login</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-60" aria-label="Operator login" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main Layout Workspace ── */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+        <p className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] sm:text-xs text-amber-800 dark:text-amber-300">
+          <FlaskConical className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>
+            <strong>Simulation.</strong> No hardware is connected - every reading is generated by a model of
+            the SWAMPDS pipeline.
+          </span>
+        </p>
+
+        {/* Critical Alert Banner (Only shown during active leak) */}
+        {sim.status === 'leak' && (
+          <div
+            role="status"
+            className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 text-xs sm:text-sm flex items-center justify-between gap-3 animate-in fade-in"
+          >
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+              <span>
+                <strong>Pump Tripped:</strong> Confirmed leak in{' '}
+                <span className="font-semibold underline">
+                  {sim.leakSegments.map((id) => SEGMENTS[id].label).join(' & ')}
+                </span>
+                . Close valves to reset.
+              </span>
+            </div>
+            <button
+              onClick={twin.acknowledgeReset}
+              className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
+            >
+              Reset
+            </button>
+          </div>
+        )}
+
+        {/* ── Vector Pipeline Schematic ── */}
+        <Card className="border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <CardHeader
+            title="Pipeline Architecture"
+            icon={Workflow}
+            iconColorClass="text-slate-500 dark:text-slate-400"
+          />
+          <PipelineSchematic
+            sim={sim}
+            horizontal={wide}
+            onToggleValve={(id, pct) => setValve(id, pct)}
+            onTogglePump={() =>
+              sim.mode === 'manual' &&
+              setManualCommand(sim.pumpOn ? 'off' : 'on')
+            }
+          />
+        </Card>
+
+        {/* ── Balanced Two-Column Layout ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Left Column: Controls & Diagnostics (5 cols) */}
+          <div className="lg:col-span-5 space-y-5">
+            <ControlPanel twin={twin} />
+            <DetectionPanel sim={sim} config={config} />
+          </div>
+
+          {/* Right Column: Telemetry, Hardware & Events (7 cols) */}
+          <div className="lg:col-span-7 space-y-5">
+            <FlowChart data={chartData} animate={false} />
+            <HardwarePanel
+              outputs={outputs}
+              soundOn={soundOn}
+              onToggleSound={() => setSoundOn((v) => !v)}
+            />
+            <DemoGuide sim={sim} config={config} />
+            <EventLog events={sim.events} startedAt={startedAt} />
+          </div>
+        </div>
+      </main>
+
+      {/* ── Report Modal ── */}
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        sim={sim}
+        config={config}
+        startedAt={startedAt}
+      />
+    </div>
+  );
+}
