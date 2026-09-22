@@ -40,7 +40,8 @@ body {
   .fluid-flow, .subtle-pulse, .gentle-drip { animation: none; }
 }
 
-/* Tank animation candidates (src/twin/tankVariants) - exploratory, see TankLab.jsx */
+/* Pipeline schematic tank fill animations (src/twin/tankVariants); the viewer picks
+   one on /twin and it's saved to swampds_tank_style in localStorage. */
 @keyframes tank-wave-drift-a {
   to { transform: translateX(-50%); }
 }

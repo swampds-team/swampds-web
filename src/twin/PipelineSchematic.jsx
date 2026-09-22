@@ -1,9 +1,13 @@
 import React from 'react';
+import { getTankFragment } from './tankVariants/index.js';
 
 /**
  * Modern, Minimalist Vector Pipeline Schematic
  * Clean geometric lines, subtle fluid flow, and clear visual hierarchy.
  */
+
+const FULL_TANK_SIZE = { w: 52, h: 68 };
+const COMPACT_TANK_SIZE = { w: 28, h: 44 };
 
 const HORIZONTAL = {
   viewBox: '0 0 920 180',
@@ -11,9 +15,8 @@ const HORIZONTAL = {
 };
 
 const PIPE_SEGMENT = [null, null, 'A', 'A', 'B', 'B', null];
-const clamp = (v, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, v));
 
-function FullSchematic({ sim, onToggleValve, onTogglePump }) {
+function FullSchematic({ sim, onToggleValve, onTogglePump, tankStyle }) {
   const layout = HORIZONTAL;
   const pos = Array.from({ length: 8 }, (_, i) => layout.at(i));
   const { flows, tanks, valves, leakFlow, segments, pumpOn } = sim;
@@ -74,34 +77,8 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
         })}
 
         {/* Node 0: Source Tank */}
-        <g transform={`translate(${pos[0].x},${pos[0].y})`}>
-          <rect
-            x="-26"
-            y="-34"
-            width="52"
-            height="68"
-            rx="8"
-            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
-            strokeWidth="2"
-          />
-          {/* Water Fill */}
-          <rect
-            x="-24"
-            y={32 - (clamp(tanks.source) / 100) * 64}
-            width="48"
-            height={(clamp(tanks.source) / 100) * 64}
-            rx="6"
-            className="fill-sky-400/30 dark:fill-sky-500/30"
-          />
-          <text
-            textAnchor="middle"
-            y="4"
-            fontSize="12"
-            fontWeight="700"
-            className="fill-slate-800 dark:fill-slate-100 font-mono"
-          >
-            {Math.round(tanks.source)}%
-          </text>
+        <g transform={`translate(${pos[0].x - FULL_TANK_SIZE.w / 2},${pos[0].y - FULL_TANK_SIZE.h / 2})`}>
+          {React.createElement(getTankFragment(tankStyle), { percent: tanks.source, active: pumpOn, ...FULL_TANK_SIZE })}
         </g>
 
         {/* Node 1: Pump */}
@@ -252,34 +229,8 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
         </g>
 
         {/* Node 7: Delivery Tank */}
-        <g transform={`translate(${pos[7].x},${pos[7].y})`}>
-          <rect
-            x="-26"
-            y="-34"
-            width="52"
-            height="68"
-            rx="8"
-            className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700"
-            strokeWidth="2"
-          />
-          {/* Water Fill */}
-          <rect
-            x="-24"
-            y={32 - (clamp(tanks.delivery) / 100) * 64}
-            width="48"
-            height={(clamp(tanks.delivery) / 100) * 64}
-            rx="6"
-            className="fill-sky-400/30 dark:fill-sky-500/30"
-          />
-          <text
-            textAnchor="middle"
-            y="4"
-            fontSize="12"
-            fontWeight="700"
-            className="fill-slate-800 dark:fill-slate-100 font-mono"
-          >
-            {Math.round(tanks.delivery)}%
-          </text>
+        <g transform={`translate(${pos[7].x - FULL_TANK_SIZE.w / 2},${pos[7].y - FULL_TANK_SIZE.h / 2})`}>
+          {React.createElement(getTankFragment(tankStyle), { percent: tanks.delivery, active: pumpOn, ...FULL_TANK_SIZE })}
         </g>
 
         {/* Minimalist Clean Labels */}
@@ -358,7 +309,7 @@ function Caption({ x, row, children, className = MUTED, mono = false, size = 10,
   );
 }
 
-function CompactSchematic({ sim, onToggleValve, onTogglePump }) {
+function CompactSchematic({ sim, onToggleValve, onTogglePump, tankStyle }) {
   const { flows, tanks, valves, leakFlow, segments, pumpOn } = sim;
   const pos = Array.from({ length: 8 }, (_, i) => COMPACT.at(i));
   const pipeFlow = [flows.f1, flows.f1, flows.f1, flows.f2, flows.f2, flows.f3, flows.f3];
@@ -371,17 +322,11 @@ function CompactSchematic({ sim, onToggleValve, onTogglePump }) {
     return 'stroke-slate-200 dark:stroke-slate-800';
   };
 
-  const tank = (i, pct) => {
-    const h = (clamp(pct) / 100) * 40;
-    return (
-      <g transform={`translate(${pos[i].x},${pos[i].y})`}>
-        <rect x="-14" y="-22" width="28" height="44" rx="6"
-          className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700" strokeWidth="1.5" />
-        <rect x="-12.5" y={20 - h} width="25" height={h} rx="4" className="fill-sky-400/30 dark:fill-sky-500/30" />
-        <text textAnchor="middle" y="3.5" fontSize="10" fontWeight="700" className={INK}>{Math.round(pct)}%</text>
-      </g>
-    );
-  };
+  const tank = (i, pct) => (
+    <g transform={`translate(${pos[i].x - COMPACT_TANK_SIZE.w / 2},${pos[i].y - COMPACT_TANK_SIZE.h / 2})`}>
+      {React.createElement(getTankFragment(tankStyle), { percent: pct, active: pumpOn, ...COMPACT_TANK_SIZE })}
+    </g>
+  );
 
   const sensor = (i, name) => (
     <g transform={`translate(${pos[i].x},${pos[i].y})`}>
@@ -482,8 +427,16 @@ function CompactSchematic({ sim, onToggleValve, onTogglePump }) {
 }
 
 /**
- * @param {{ sim: object, layout?: 'full'|'compact', onToggleValve?: Function, onTogglePump?: Function }} props
- * `full` is the wide desktop drawing; `compact` is the same left-to-right flow sized for phones and tablets.
+ * @param {{
+ *   sim: object,
+ *   layout?: 'full'|'compact',
+ *   tankStyle?: 'wave'|'bubbles'|'glass'|'ripple',
+ *   onToggleValve?: Function,
+ *   onTogglePump?: Function,
+ * }} props
+ * `full` is the wide desktop drawing; `compact` is the same left-to-right flow sized for phones
+ * and tablets. `tankStyle` picks the source/delivery tank animation (see tankVariants/index.js);
+ * it defaults to DEFAULT_TANK_STYLE when omitted or unrecognised.
  */
 export default function PipelineSchematic({ layout = 'full', ...props }) {
   return layout === 'compact' ? <CompactSchematic {...props} /> : <FullSchematic {...props} />;
