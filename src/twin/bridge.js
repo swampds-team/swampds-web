@@ -8,7 +8,7 @@
  */
 
 import {
-  toSnapshot, flatten, shouldPublishEvent, eventToAlert,
+  toSnapshot, flatten, shouldPublishEvent, eventToAlert, connectionAlert,
   createPumpTracker, trackPump, controlIntents, canAcquireLock,
   PUBLISH_INTERVAL_MS,
 } from './contract.js';
@@ -49,6 +49,10 @@ export function createBridge(deps) {
   const dbControl = { mode: null, cmd: null }; // what the database currently holds
 
   const status = (state, extra = {}) => onStatus({ state, ...extra });
+
+  /** Best-effort: a failed connection-log write must never block connecting or disconnecting. */
+  const logConnection = (kind, timestamp) =>
+    push(ref(db, 'alerts'), connectionAlert(kind, identity.email, timestamp)).catch(() => {});
 
   async function fail(error) {
     status('error', { message: error?.message ?? String(error) });
@@ -109,6 +113,7 @@ export function createBridge(deps) {
       ];
 
       running = true;
+      logConnection('connected', t); // visible on the dashboard: an alert, not just the "simulated data" banner
       await publish();
       timer = setIntervalFn(() => { publish().catch(fail); }, PUBLISH_INTERVAL_MS);
       return true;
@@ -132,6 +137,7 @@ export function createBridge(deps) {
 
     if (wasRunning && release) {
       try {
+        await logConnection('disconnected', now());
         await runTransaction(lockRef, (current) => (current?.clientId === clientId ? null : undefined));
         await update(root(), { 'system/online': false });
       } catch { /* best effort: onDisconnect / lock expiry cover a failed cleanup */ }
@@ -151,7 +157,12 @@ export function createBridge(deps) {
       const t = now();
       const sim = getSim();
 
-      const updates = flatten(toSnapshot(sim, getConfig(), t));
+      // Advance the pump-session tracker first, so this tick's snapshot carries an up-to-date
+      // pumpStartedAt (and, if the pump just stopped, the finished session goes to pumpHistory below).
+      const tracked = trackPump(tracker, sim.pumpOn, t);
+      tracker = tracked.tracker;
+
+      const updates = flatten(toSnapshot(sim, getConfig(), t, tracker.startedAt));
       updates['twinLock/heartbeat'] = t;
       await update(root(), updates);
 
@@ -163,9 +174,7 @@ export function createBridge(deps) {
         if (shouldPublishEvent(event)) await push(ref(db, 'alerts'), eventToAlert(event, t + offset++));
       }
 
-      const result = trackPump(tracker, sim.pumpOn, t);
-      tracker = result.tracker;
-      if (result.session) await push(ref(db, 'pumpHistory'), result.session);
+      if (tracked.session) await push(ref(db, 'pumpHistory'), tracked.session);
 
       status('live', { lastPublishAt: t });
     } finally {

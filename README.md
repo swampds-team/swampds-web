@@ -34,10 +34,11 @@ Defined in [`src/twin/contract.js`](src/twin/contract.js). Real hardware should 
 | `system/status` | device | `NORMAL` \| `WARNING` \| `LEAK` |
 | `system/pumpState` | device | `ON` \| `OFF` |
 | `system/pumpMode` | device | mirror of `status/controlMode` |
+| `system/pumpStartedAt` | device | ms epoch the current run began; absent while the pump is off — lets the dashboard show a real runtime instead of counting from when its page loaded |
 | `system/source` | device | e.g. `digital-twin` — dashboard warns if it is the twin |
 | `system/online` | device | `true`; set to `false` on clean disconnect |
 | `system/leakSegments` | device | `A`, `B` or `A,B` (absent when no leak) |
-| `alerts/<id>` | device | `{ time, severity, message, timestamp }` |
+| `alerts/<id>` | device | `{ time, severity, message, timestamp }`; includes a connect/disconnect notice each time the twin links to the dashboard, so that's visible in the alert list and pumping-history log, not just the banner |
 | `pumpHistory/<id>` | device | `{ date, start, end, duration, startTimestamp }` |
 | `status/controlMode` | dashboard | `auto` \| `manual` |
 | `control/pumpCommand` | dashboard | `on` \| `off` (manual mode only) |

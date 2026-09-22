@@ -1,26 +1,20 @@
 import React from 'react';
-import { Activity, History } from 'lucide-react';
+import { Activity, History, CheckCircle2 } from 'lucide-react';
 import { Card, CardHeader } from '../components/Card';
 import { usePumpHistory, useSwampdsData } from '../data/swampdsData';
-
-const BASE_EVENTS = [
-  { border: 'border-green-500', time: '08:00 AM', title: 'System Boot',  desc: 'SWAMPDS initialized successfully.' },
-  { border: 'border-blue-500',  time: '07:50 AM', title: 'Pump Started', desc: 'Auto mode: water level below 20% threshold.' },
-];
 
 export default function PumpingHistory() {
   const history = usePumpHistory();
   const { alerts } = useSwampdsData();
 
-  // Wire to live alerts array as single source of truth, with baseline events at the bottom
-  const liveEvents = alerts.map(a => ({
+  // Live alerts are the single source of truth here - no placeholder rows are mixed in,
+  // so an empty log means no events have actually been recorded yet.
+  const events = alerts.slice(0, 8).map(a => ({
     border: a.severity === 'critical' ? 'border-red-500' : a.severity === 'warning' ? 'border-amber-500' : 'border-blue-500',
     time: a.time,
     title: a.severity === 'critical' ? 'Alert / Divergence' : a.severity === 'warning' ? 'Warning Issued' : 'System Notice',
     desc: a.message,
   }));
-
-  const allEvents = [...liveEvents, ...BASE_EVENTS].slice(0, 8);
 
   return (
     <div className="space-y-6">
@@ -70,17 +64,25 @@ export default function PumpingHistory() {
         <Card>
           <CardHeader title="System Event Log" icon={Activity} />
           <p className="text-xs text-slate-400 mb-4">Real-time alerts and state changes.</p>
-          <div className="space-y-3.5">
-            {allEvents.map(({ border, time, title, desc }, idx) => (
-              <div key={idx} className={`flex gap-3 text-sm border-l-2 ${border} pl-3 py-0.5`}>
-                <div className="text-slate-400 w-16 flex-shrink-0 text-xs pt-0.5 font-mono">{time}</div>
-                <div>
-                  <p className="font-semibold text-slate-800 text-xs sm:text-sm">{title}</p>
-                  <p className="text-slate-500 mt-0.5 text-xs leading-snug">{desc}</p>
+          {events.length === 0 ? (
+            <div className="py-10 text-center text-slate-400">
+              <CheckCircle2 className="w-8 h-8 mx-auto mb-3 text-green-300" />
+              <p className="text-sm font-medium">No events yet</p>
+              <p className="text-xs mt-1">Warnings, leaks and pump/twin activity will appear here as they happen.</p>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {events.map(({ border, time, title, desc }, idx) => (
+                <div key={idx} className={`flex gap-3 text-sm border-l-2 ${border} pl-3 py-0.5`}>
+                  <div className="text-slate-400 w-16 flex-shrink-0 text-xs pt-0.5 font-mono">{time}</div>
+                  <div>
+                    <p className="font-semibold text-slate-800 text-xs sm:text-sm">{title}</p>
+                    <p className="text-slate-500 mt-0.5 text-xs leading-snug">{desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>

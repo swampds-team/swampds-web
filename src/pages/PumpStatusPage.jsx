@@ -18,17 +18,19 @@ const isPumpAlert = (msg) => PUMP_KEYWORDS.some(kw => msg.toLowerCase().includes
 
 export default function PumpStatusPage() {
   const { status, alerts } = useSwampdsData();
-  const [runtime, setRuntime] = useState(0);
 
-  // Runtime counter - resets when pump turns off
+  // Ticks once a second while the pump is on, purely to re-render the elapsed-time calculation
+  // below - it never accumulates its own count, so it can't drift from what the backend reports.
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (status.pumpStatus !== 'on') {
-      setRuntime(0);
-      return;
-    }
-    const id = setInterval(() => setRuntime(t => t + 1), 1000);
+    if (status.pumpStatus !== 'on') return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [status.pumpStatus]);
+
+  const isOn = status.pumpStatus === 'on';
+  const hasStartTime = isOn && Number.isFinite(status.pumpStartedAt);
+  const runtimeSec = hasStartTime ? Math.max(0, Math.floor((now - status.pumpStartedAt) / 1000)) : null;
 
   const recentPumpAlerts = alerts.filter(a => isPumpAlert(a.message)).slice(0, 6);
 
@@ -50,13 +52,15 @@ export default function PumpStatusPage() {
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <Card>
             <CardHeader title="Current Runtime" icon={Clock} iconColorClass="text-blue-500" />
-            <div className={`text-3xl sm:text-4xl font-bold mt-2 ${status.pumpStatus === 'on' ? 'text-green-600' : 'text-slate-400'}`}>
-              {status.pumpStatus === 'on' ? formatRuntime(runtime) : '-'}
+            <div className={`text-3xl sm:text-4xl font-bold mt-2 ${isOn ? 'text-green-600' : 'text-slate-400'}`}>
+              {hasStartTime ? formatRuntime(runtimeSec) : '-'}
             </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-2">
-              {status.pumpStatus === 'on'
-                ? 'Pump has been running this session'
-                : 'Pump is not currently running'}
+              {!isOn
+                ? 'Pump is not currently running.'
+                : hasStartTime
+                  ? 'Time since the pump started this run.'
+                  : 'Pump is running, but the device has not reported when it started.'}
             </p>
           </Card>
 
