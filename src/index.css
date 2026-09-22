@@ -40,6 +40,40 @@ body {
   .fluid-flow, .subtle-pulse, .gentle-drip { animation: none; }
 }
 
+/* Tank animation candidates (src/twin/tankVariants) - exploratory, see TankLab.jsx */
+@keyframes tank-wave-drift-a {
+  to { transform: translateX(-50%); }
+}
+@keyframes tank-wave-drift-b {
+  to { transform: translateX(50%); }
+}
+.tw-wave-a { animation: tank-wave-drift-a 5s linear infinite; }
+.tw-wave-b { animation: tank-wave-drift-b 3.4s linear infinite; }
+
+@keyframes tank-bubble-rise {
+  0%   { transform: translateY(0); opacity: 0; }
+  15%  { opacity: 0.7; }
+  100% { transform: translateY(calc(-1 * var(--rise))); opacity: 0; }
+}
+.tb-bubble { animation: tank-bubble-rise linear infinite; }
+
+@keyframes tank-glass-shine {
+  0%   { transform: translateX(0) skewX(-18deg); }
+  100% { transform: translateX(420%) skewX(-18deg); }
+}
+.tg-shine { animation: tank-glass-shine 3.2s ease-in-out infinite; animation-delay: 0.6s; }
+
+@keyframes tank-ripple-surface {
+  0%, 100% { stroke-dashoffset: 0; }
+  50%      { stroke-dashoffset: 9; }
+}
+.tr-surface { animation: tank-ripple-surface 2.2s ease-in-out infinite; }
+.tr-pulse   { animation: subtle-pulse 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tw-wave-a, .tw-wave-b, .tb-bubble, .tg-shine, .tr-surface, .tr-pulse { animation: none; }
+}
+
 /* Touch-friendly range slider: a 44px hit area, a clear track and a large thumb.
    Set --pct (filled percentage) and optionally --fill on the element. */
 .twin-range {

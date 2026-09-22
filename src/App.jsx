@@ -10,6 +10,7 @@ const AppLayout        = lazy(() => import('./components/layout/AppLayout'));
 // Public routes
 const Login            = lazy(() => import('./pages/Login'));
 const TwinPage         = lazy(() => import('./twin/TwinPage'));
+const TankLab          = lazy(() => import('./twin/TankLab'));
 
 // Protected pages
 const Dashboard        = lazy(() => import('./pages/Dashboard'));
@@ -39,6 +40,8 @@ export default function App() {
         <Routes>
           {/* Public, no Firebase: digital twin simulation */}
           <Route path="/twin" element={<TwinPage />} />
+          {/* Exploratory only, not linked from the nav - see TankLab.jsx */}
+          <Route path="/tank-lab" element={<TankLab />} />
 
           {/* Everything below needs Firebase auth */}
           <Route element={<AuthShell />}>
