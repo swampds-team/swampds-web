@@ -36,7 +36,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
         role="img"
         aria-label="Pipeline schematic"
       >
-        {/* ── Connecting Pipe Lines ── */}
+        {/* Connecting Pipe Lines */}
         {pipeFlow.map((flow, i) => {
           const a = pos[i], b = pos[i + 1];
           const hasFlow = flow > 0.08;
@@ -73,7 +73,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           );
         })}
 
-        {/* ── Node 0: Source Tank ── */}
+        {/* Node 0: Source Tank */}
         <g transform={`translate(${pos[0].x},${pos[0].y})`}>
           <rect
             x="-26"
@@ -104,7 +104,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           </text>
         </g>
 
-        {/* ── Node 1: Pump ── */}
+        {/* Node 1: Pump */}
         <g
           transform={`translate(${pos[1].x},${pos[1].y})`}
           className="cursor-pointer"
@@ -125,7 +125,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           />
         </g>
 
-        {/* ── Node 2: Sensor F1 ── */}
+        {/* Node 2: Sensor F1 */}
         <g transform={`translate(${pos[2].x},${pos[2].y})`}>
           <rect
             x="-24"
@@ -147,7 +147,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           </text>
         </g>
 
-        {/* ── Node 3: Valve A ── */}
+        {/* Node 3: Valve A */}
         <g
           transform={`translate(${pos[3].x},${pos[3].y})`}
           className="cursor-pointer"
@@ -177,7 +177,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           )}
         </g>
 
-        {/* ── Node 4: Sensor F2 ── */}
+        {/* Node 4: Sensor F2 */}
         <g transform={`translate(${pos[4].x},${pos[4].y})`}>
           <rect
             x="-24"
@@ -199,7 +199,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           </text>
         </g>
 
-        {/* ── Node 5: Valve B ── */}
+        {/* Node 5: Valve B */}
         <g
           transform={`translate(${pos[5].x},${pos[5].y})`}
           className="cursor-pointer"
@@ -229,7 +229,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           )}
         </g>
 
-        {/* ── Node 6: Sensor F3 ── */}
+        {/* Node 6: Sensor F3 */}
         <g transform={`translate(${pos[6].x},${pos[6].y})`}>
           <rect
             x="-24"
@@ -251,7 +251,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           </text>
         </g>
 
-        {/* ── Node 7: Delivery Tank ── */}
+        {/* Node 7: Delivery Tank */}
         <g transform={`translate(${pos[7].x},${pos[7].y})`}>
           <rect
             x="-26"
@@ -282,7 +282,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
           </text>
         </g>
 
-        {/* ── Minimalist Clean Labels ── */}
+        {/* Minimalist Clean Labels */}
           <>
             {/* Source */}
             <text x={pos[0].x} y="132" textAnchor="middle" fontSize="10" fontWeight="600" className="fill-slate-400 uppercase tracking-wider">Source</text>
@@ -331,7 +331,7 @@ function FullSchematic({ sim, onToggleValve, onTogglePump }) {
   );
 }
 
-// ── Compact horizontal layout (phones and tablets) ────────────────────────────
+// Compact horizontal layout (phones and tablets)
 // Same left-to-right flow as the full layout, drawn at real sizes (8 nodes in ~330 units) so
 // text stays legible instead of being shrunk with the whole picture.
 

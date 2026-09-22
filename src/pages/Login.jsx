@@ -31,7 +31,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex font-sans bg-slate-50">
 
-      {/* ── Left panel - dark navy brand (desktop only) ── */}
+      {/* Left panel - dark navy brand (desktop only) */}
       <div className="hidden md:flex w-80 bg-[#0B1120] flex-col justify-between p-8 lg:p-10 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Droplets className="w-8 h-8 text-blue-500" />
@@ -79,7 +79,7 @@ export default function Login() {
         </p>
       </div>
 
-      {/* ── Right panel - sign-in form ── */}
+      {/* Right panel - sign-in form */}
       <div className="flex-1 flex flex-col items-center justify-center p-5 sm:p-8 my-auto">
         {/* Mobile brand header */}
         <div className="md:hidden flex items-center gap-2.5 mb-8">

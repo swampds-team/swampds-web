@@ -1,20 +1,12 @@
 /**
- * @fileoverview SWAMPDS Data Layer - the single Firebase swap boundary.
+ * @fileoverview SWAMPDS data layer - the only file that talks to Firebase.
  *
- * PUBLIC API:
- *   useSwampdsData()     → live sensor + status + alerts snapshot
- *   useChartHistory()    → { flowData, waterLevelData } for trend charts
- *                          (built from real readings recorded as they arrive)
- *   sendPumpCommand(cmd) → write "on" | "off" to the pump command
- *   setControlMode(mode) → write "auto" | "manual" to the control mode
- *   usePumpHistory()     → historical pump on/off event log
- *
- * TO WIRE FIREBASE: replace only the internals of this file.
- *   - setInterval      → onValue(ref(db, '/'), snap => _notify(snap.val()))
- *   - sendPumpCommand  → set(ref(db, 'control/pumpCommand'), cmd)
- *   - setControlMode   → set(ref(db, 'status/controlMode'), mode)
- *   - useChartHistory  → Firebase time-series query
- *   Nothing outside this file needs to change.
+ * useSwampdsData()     live sensor + status + alerts snapshot
+ * useChartHistory()    { flowData, waterLevelData } for trend charts, built from
+ *                      readings recorded here as they arrive (Firebase keeps no history)
+ * sendPumpCommand(cmd) write "on" | "off" to the pump command
+ * setControlMode(mode) write "auto" | "manual" to the control mode
+ * usePumpHistory()     pump on/off session log
  */
 
 import { useState, useEffect } from 'react';
@@ -26,7 +18,7 @@ const db = getDatabase(app);
 /** Auto-pump thresholds (% water level). Display values only - the web app does not enforce them. */
 export const PUMP_THRESHOLDS = { low: 20, full: 95 };
 
-// ── Live store (populated by Firebase onValue) ────────────────────────────────
+// Live store (populated by Firebase onValue)
 
 const initialData = {
   sensors: {
@@ -103,7 +95,7 @@ onValue(ref(db, '/'), (snap) => {
   if (val.sensors) _recordSample(val.sensors);
 });
 
-// ── Chart history (recorded from the live stream) ─────────────────────────────
+// Chart history (recorded from the live stream)
 // Firebase only holds the latest sensor values, so trend data is built here:
 // one sample per SAMPLE_INTERVAL_MS, kept for 24 h, persisted in localStorage
 // so a page reload does not wipe the charts. Only records while the app is open.
@@ -157,7 +149,7 @@ function _recordSample(sensors) {
   }
 }
 
-// ── PUBLIC HOOKS & COMMANDS ───────────────────────────────────────────────────
+// PUBLIC HOOKS & COMMANDS
 
 /**
  * Subscribe to live sensor, status, and alert data.
@@ -224,7 +216,7 @@ export function usePumpHistory() {
         setHistory([]);
         return;
       }
-      // Firebase push-keys come back as an object — convert and sort newest first
+      // Firebase push-keys come back as an object: convert and sort newest first
       const rows = Array.isArray(val)
         ? val
         : Object.values(val).sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));

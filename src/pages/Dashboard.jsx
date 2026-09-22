@@ -46,11 +46,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 3 - Charts + alerts row: 1 col on mobile & tablet, 3 col on desktop */}
+      {/* 3 - Charts + alerts row: 1 col on mobile & tablet, charts stacked + alerts aside on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <WaterLevelChart data={waterLevelData} />
-        <FlowChart       data={flowData} />
-        <AlertsPanel     alerts={alerts} />
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <WaterLevelChart data={waterLevelData} />
+          <FlowChart       data={flowData} />
+        </div>
+        <AlertsPanel alerts={alerts} />
       </div>
 
     </div>

@@ -18,7 +18,7 @@ export default function HardwarePanel({ outputs, soundOn, onToggleSound }) {
         iconColorClass="text-slate-500 dark:text-slate-400"
       />
 
-      {/* ── Sleek Minimalist OLED Screen ── */}
+      {/* Sleek Minimalist OLED Screen */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[11px] font-medium text-slate-400">
           <span>OLED 128×64 Display</span>
@@ -41,7 +41,7 @@ export default function HardwarePanel({ outputs, soundOn, onToggleSound }) {
         </div>
       </div>
 
-      {/* ── Status Indicators (Clean Minimalist Dots) ── */}
+      {/* Status Indicators (Clean Minimalist Dots) */}
       <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
         <div className="text-[11px] font-medium text-slate-400 mb-2">Status Indicators</div>
         <div className="grid grid-cols-3 gap-2">
@@ -95,7 +95,7 @@ export default function HardwarePanel({ outputs, soundOn, onToggleSound }) {
         </div>
       </div>
 
-      {/* ── Actuators (Relay & Buzzer) ── */}
+      {/* Actuators (Relay & Buzzer) */}
       <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
         {/* Relay */}
         <div className="flex items-center justify-between text-xs">

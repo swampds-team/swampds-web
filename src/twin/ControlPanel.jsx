@@ -34,7 +34,7 @@ export default function ControlPanel({ twin }) {
 
   return (
     <div className="space-y-4">
-      {/* ── Leak Valves & Scenarios ── */}
+      {/* Leak Valves & Scenarios */}
       <Card className="border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <CardHeader
           title="Leak Simulation"
@@ -113,7 +113,7 @@ export default function ControlPanel({ twin }) {
         </div>
       </Card>
 
-      {/* ── Pump Control Card ── */}
+      {/* Pump Control Card */}
       <div>
         <PumpControlCard
           pumpStatus={sim.pumpOn ? 'on' : 'off'}
@@ -128,7 +128,7 @@ export default function ControlPanel({ twin }) {
         )}
       </div>
 
-      {/* ── Reservoirs & Calibration ── */}
+      {/* Reservoirs & Calibration */}
       <Card className="border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Reservoirs</span>
