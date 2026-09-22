@@ -20,8 +20,10 @@ import FlowChart from '../components/dashboard/FlowChart';
 import { useTwin } from './useTwin.js';
 import { useBuzzer } from './useBuzzer.js';
 import { useMediaQuery } from './useMediaQuery.js';
+import { useTankStyle } from './useTankStyle.js';
 import { deriveOutputs } from './outputs.js';
 import { SEGMENTS } from './config.js';
+import { TANK_STYLES } from './tankVariants/index.js';
 import { formatElapsed } from './format.js';
 
 import PipelineSchematic from './PipelineSchematic.jsx';
@@ -86,6 +88,7 @@ export default function TwinPage() {
   const [soundOn, setSoundOn] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(readInitialDark);
+  const [tankStyle, setTankStyle] = useTankStyle();
 
   const wide = useMediaQuery('(min-width: 1024px)');
   const outputs = useMemo(() => deriveOutputs(sim), [sim]);
@@ -253,9 +256,32 @@ export default function TwinPage() {
             icon={Workflow}
             iconColorClass="text-slate-500 dark:text-slate-400"
           />
+
+          {/* Tank animation preference - saved to this browser (localStorage) */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-3 -mt-1" role="radiogroup" aria-label="Tank animation style">
+            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mr-0.5">Tank style</span>
+            {TANK_STYLES.map(({ id, name }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={tankStyle === id}
+                onClick={() => setTankStyle(id)}
+                className={`px-2.5 py-2 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
+                  tankStyle === id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+
           <PipelineSchematic
             sim={sim}
             layout={wide ? 'full' : 'compact'}
+            tankStyle={tankStyle}
             onToggleValve={(id, pct) => setValve(id, pct)}
             onTogglePump={() =>
               sim.mode === 'manual' &&

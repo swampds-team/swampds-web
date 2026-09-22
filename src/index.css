@@ -40,6 +40,41 @@ body {
   .fluid-flow, .subtle-pulse, .gentle-drip { animation: none; }
 }
 
+/* Pipeline schematic tank fill animations (src/twin/tankVariants); the viewer picks
+   one on /twin and it's saved to swampds_tank_style in localStorage. */
+@keyframes tank-wave-drift-a {
+  to { transform: translateX(calc(-1 * var(--wave-w, 96px))); }
+}
+@keyframes tank-wave-drift-b {
+  to { transform: translateX(var(--wave-w, 96px)); }
+}
+.tw-wave-a { animation: tank-wave-drift-a 5s linear infinite; }
+.tw-wave-b { animation: tank-wave-drift-b 3.4s linear infinite; }
+
+@keyframes tank-bubble-rise {
+  0%   { transform: translateY(0); opacity: 0; }
+  15%  { opacity: 0.7; }
+  100% { transform: translateY(calc(-1 * var(--rise))); opacity: 0; }
+}
+.tb-bubble { animation: tank-bubble-rise linear infinite; }
+
+@keyframes tank-glass-shine {
+  0%   { transform: translateX(0) skewX(-18deg); }
+  100% { transform: translateX(420%) skewX(-18deg); }
+}
+.tg-shine { animation: tank-glass-shine 3.2s ease-in-out infinite; animation-delay: 0.6s; }
+
+@keyframes tank-ripple-surface {
+  0%, 100% { stroke-dashoffset: 0; }
+  50%      { stroke-dashoffset: 9; }
+}
+.tr-surface { animation: tank-ripple-surface 2.2s ease-in-out infinite; }
+.tr-pulse   { animation: subtle-pulse 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tw-wave-a, .tw-wave-b, .tb-bubble, .tg-shine, .tr-surface, .tr-pulse { animation: none; }
+}
+
 /* Touch-friendly range slider: a 44px hit area, a clear track and a large thumb.
    Set --pct (filled percentage) and optionally --fill on the element. */
 .twin-range {
@@ -90,24 +125,41 @@ body {
 /* Native controls (range sliders, scrollbars) should follow the twin theme */
 .twin-app.dark { color-scheme: dark; }
 
-/* Printing the session report: show only the report, on white */
+/* Printing the session report: show only the report, on white - regardless of the twin
+   page's own dark mode, which is otherwise unrelated to (and must not leak into) print. */
 @media print {
-  body { background: #ffffff !important; }
+  html, body, .twin-app {
+    background: #ffffff !important;
+    color-scheme: light !important;
+  }
   .twin-app > *:not(.twin-report) { display: none !important; }
   .twin-report {
     position: static !important;
     display: block !important;
     padding: 0 !important;
-    background: #ffffff !important;
     backdrop-filter: none !important;
   }
   .twin-report > div {
     max-width: none !important;
-    max-height: none !important;
-    overflow: visible !important;
     border: 0 !important;
     box-shadow: none !important;
   }
-  .twin-report, .twin-report * { color: #000000 !important; background: transparent !important; }
+  /* Reset every descendant's own overflow/height too, not just the outer card - the report
+     nests scrollable regions (e.g. the event list), and each needs to expand to full height
+     or content beyond what fit on screen would silently be cut from the printout. */
+  .twin-report, .twin-report * {
+    color: #000000 !important;
+    background: transparent !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Must win over the transparent reset above: the modal backdrop and card both need an
+     opaque white background (the backdrop's is a dark semi-transparent overlay on screen),
+     or the dark .twin-app background behind them would show through everywhere. Both
+     selectors below are at least as specific as ".twin-report *", so this wins regardless
+     of source order. */
+  .twin-report, .twin-report > div {
+    background: #ffffff !important;
+  }
   .no-print { display: none !important; }
 }
