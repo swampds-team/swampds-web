@@ -64,6 +64,54 @@ test('connecting takes the lock, reports its mode, and publishes the contract', 
   assert.equal(fake.get('twinLock/heartbeat'), 6_000);
 });
 
+test('connecting logs a visible "connected" alert, not just the banner metadata', async () => {
+  const fake = createFakeDb();
+  const clock = { t: 42_000 };
+  const tab = makeTab(fake, { email: 'alice@team.test', clock });
+  await tab.bridge.start();
+
+  const alerts = values(fake.get('alerts'));
+  const connect = alerts.find((a) => a.message.includes('connected'));
+  assert.ok(connect, 'no connection alert was written');
+  assert.equal(connect.severity, 'info');
+  assert.equal(connect.source, DATA_SOURCE);
+  assert.match(connect.message, /alice@team\.test/);
+  assert.match(connect.message, /simulated data/i);
+});
+
+test('disconnecting logs a visible "disconnected" alert; a takeover does not (the new "connected" entry covers it)', async () => {
+  const fake = createFakeDb();
+  const clock = { t: 1000 };
+  const a = makeTab(fake, { clientId: 'tab-A', email: 'alice@team.test', clock });
+  await a.bridge.start();
+  await a.bridge.stop();
+
+  const afterExplicit = values(fake.get('alerts'));
+  assert.equal(afterExplicit.filter((x) => x.message.startsWith('Digital twin connected by alice')).length, 1);
+  assert.equal(afterExplicit.filter((x) => x.message.startsWith('Digital twin disconnected by alice')).length, 1);
+
+  const b = makeTab(fake, { clientId: 'tab-B', email: 'bob@team.test', clock });
+  const c = makeTab(fake, { clientId: 'tab-C', email: 'carol@team.test', clock });
+  await b.bridge.start();
+  await c.bridge.start({ force: true }); // displaces b without releasing - no separate "disconnected" for b
+
+  const afterTakeover = values(fake.get('alerts'));
+  assert.equal(afterTakeover.filter((x) => x.message.startsWith('Digital twin disconnected by bob')).length, 0);
+  assert.equal(afterTakeover.filter((x) => x.message.startsWith('Digital twin connected by carol')).length, 1);
+});
+
+test('a failed connection-log write never blocks connecting or disconnecting', async () => {
+  const fake = createFakeDb();
+  const clock = { t: 1000 };
+  const tab = makeTab(fake, { clock });
+
+  const originalPush = fake.api.push;
+  fake.api.push = (r, value) => (r.path === 'alerts' ? Promise.reject(new Error('nope')) : originalPush(r, value));
+  assert.equal(await tab.bridge.start(), true, 'start still succeeds even though the alert write fails');
+  assert.equal(tab.last().state, 'live');
+  fake.api.push = originalPush;
+});
+
 test('a leak reaches the dashboard: status, segment, alert and a pump-history row', async () => {
   const fake = createFakeDb();
   const clock = { t: Date.UTC(2026, 8, 8, 9, 0, 0) };
@@ -90,13 +138,38 @@ test('a leak reaches the dashboard: status, segment, alert and a pump-history ro
   assert.match(history[0].duration, /^\d+m \d+s$/);
 });
 
+test('system/pumpStartedAt tracks the real pump run, not the page/tab lifetime', async () => {
+  const fake = createFakeDb();
+  const clock = { t: 10_000 };
+  const tab = makeTab(fake, { clock });
+  await tab.bridge.start(); // pump is off at t=10_000
+
+  assert.equal(fake.get('system/pumpStartedAt'), null);
+
+  // water level is already low enough that auto mode starts the pump on the very next tick
+  const tick = async () => { clock.t += 700; tab.advance(); await tab.bridge.publishNow(); };
+  await tick();
+  assert.equal(tab.sim.pumpOn, true, 'precondition: pump started');
+  const startedAt = fake.get('system/pumpStartedAt');
+  assert.equal(startedAt, 10_700, 'the tick the pump actually turned on, not when the tab connected');
+
+  for (let i = 0; i < 5; i++) {
+    await tick();
+    assert.equal(fake.get('system/pumpStartedAt'), startedAt, 'stays fixed for the whole run');
+  }
+});
+
 test('events from before connecting are not replayed to the dashboard', async () => {
   const fake = createFakeDb();
   const clock = { t: 1000 };
   const tab = makeTab(fake, { clock });
   tab.advance(4); tab.sim = setValve(tab.sim, 'B', 30);           // history already in the log
   await tab.bridge.start();
-  assert.deepEqual(values(fake.get('alerts')), []);
+  // The one alert allowed through is the "connected" notice itself - none of the pre-connection
+  // engine events (e.g. opening Valve B) were replayed.
+  const alerts = values(fake.get('alerts'));
+  assert.equal(alerts.length, 1);
+  assert.match(alerts[0].message, /^Digital twin connected/);
 });
 
 test('restarting the twin keeps publishing its new events', async () => {

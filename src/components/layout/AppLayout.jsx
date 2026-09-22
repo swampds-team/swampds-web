@@ -96,6 +96,37 @@ export default function AppLayout() {
     }
   }, [loaded, status?.systemStatus]);
 
+  // Fire a browser notification when the Digital Twin connects to / disconnects from the
+  // dashboard - the "Simulated data" banner is easy to miss if you're not looking at the page.
+  const prevTwinRef = React.useRef(null);
+  useEffect(() => {
+    if (!loaded) return;
+
+    const connected = meta?.source === 'digital-twin' && meta?.online === true;
+    const prev = prevTwinRef.current;
+
+    // First real snapshot: record it as the baseline, don't notify
+    if (prev === null) {
+      prevTwinRef.current = connected;
+      return;
+    }
+
+    if (connected !== prev) {
+      prevTwinRef.current = connected;
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const msg = connected
+          ? { title: 'SWAMPDS - Digital Twin Connected', body: 'This dashboard is now showing simulated data from the Digital Twin.' }
+          : { title: 'SWAMPDS - Digital Twin Disconnected', body: 'The Digital Twin has stopped publishing. Data may be stale.' };
+        new Notification(msg.title, {
+          body: msg.body,
+          icon: '/favicon.svg',
+          tag:  'swampds-twin', // replaces previous notification instead of stacking
+        });
+      }
+    }
+  }, [loaded, meta?.source, meta?.online]);
+
   const pageTitle  = ROUTE_TITLES[pathname] ?? 'SWAMPDS';
   const alertCount = alerts.filter(a => a.severity === 'critical').length;
 

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { DEFAULT_CONFIG as CFG } from './config.js';
 import { createInitialState, step, setValve, setMode } from './engine.js';
 import {
-  toSnapshot, flatten, shouldPublishEvent, eventToAlert, formatDuration,
+  toSnapshot, flatten, shouldPublishEvent, eventToAlert, connectionAlert, formatDuration,
   createPumpTracker, trackPump, controlIntents, canAcquireLock, describeDataSource,
   DATA_SOURCE, LOCK_TTL_MS, STALE_AFTER_MS,
 } from './contract.js';
@@ -24,6 +24,17 @@ test('snapshot maps the engine state to what the dashboard reads', () => {
     { status: 'NORMAL', pump: 'ON', mode: 'AUTO', src: DATA_SOURCE, online: true },
   );
   assert.equal(snap.system.leakSegments, null, 'no leak -> field is deleted');
+  assert.equal(snap.system.pumpStartedAt, null, 'no start time passed in -> field is deleted');
+});
+
+test('snapshot reports a real pump-start time while the pump is on, and clears it once it stops', () => {
+  const running = run(createInitialState(), 3);
+  assert.equal(toSnapshot(running, CFG, 999, 12_345).system.pumpStartedAt, 12_345);
+
+  let s = running;
+  for (let i = 0; i < 200 && s.pumpOn; i++) s = step(s, CFG, CFG.tickSec, () => 0.5); // wait for the tank to fill and the pump to stop
+  assert.equal(s.pumpOn, false);
+  assert.equal(toSnapshot(s, CFG, 999, 12_345).system.pumpStartedAt, null, 'stale start time must not linger once the pump is off');
 });
 
 test('snapshot reports a leak with its segments', () => {
@@ -51,6 +62,23 @@ test('alerts use the dashboard shape and a plain-space "10:25 AM" time', () => {
   const ts = new Date(2026, 8, 8, 10, 25, 30).getTime();
   const alert = eventToAlert({ severity: 'critical', message: 'LEAK', source: 'system' }, ts);
   assert.deepEqual(alert, { time: '10:25 AM', severity: 'critical', message: 'LEAK', timestamp: ts, source: DATA_SOURCE });
+});
+
+test('connection alerts are visible dashboard entries, not just a banner', () => {
+  const ts = new Date(2026, 8, 8, 10, 25, 30).getTime();
+
+  const connected = connectionAlert('connected', 'alice@team.test', ts);
+  assert.equal(connected.severity, 'info');
+  assert.equal(connected.source, DATA_SOURCE);
+  assert.equal(connected.timestamp, ts);
+  assert.match(connected.message, /connected by alice@team\.test/);
+  assert.match(connected.message, /simulated data/i);
+
+  const disconnected = connectionAlert('disconnected', 'alice@team.test', ts);
+  assert.match(disconnected.message, /disconnected by alice@team\.test/);
+
+  const anonymous = connectionAlert('connected', undefined, ts);
+  assert.doesNotMatch(anonymous.message, / by /, 'no email -> no dangling "by"');
 });
 
 test('durations match the pump-history format', () => {

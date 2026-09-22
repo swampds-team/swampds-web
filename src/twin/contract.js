@@ -7,10 +7,12 @@
  *   system/status      'NORMAL' | 'WARNING' | 'LEAK'
  *   system/pumpState   'ON' | 'OFF'
  *   system/pumpMode    'AUTO' | 'MANUAL'   (mirror of status/controlMode)
+ *   system/pumpStartedAt  ms epoch the current pump run began (absent while the pump is off)
  *   system/source      'digital-twin'      (so the dashboard can say the data is simulated)
  *   system/online      true
  *   system/leakSegments  'A' | 'B' | 'A,B'   (absent when there is no leak)
  *   alerts/<pushId>    { time, severity, message, timestamp, source }
+ *     - one is written when the twin connects to / disconnects from the dashboard
  *   pumpHistory/<pushId>  { date, start, end, duration, startTimestamp }
  *   twin/valves/A|B, twin/tolerancePct, twin/persistSec   (informational)
  *   twinLock           { clientId, uid, email, since, heartbeat }   (single-publisher lock)
@@ -31,8 +33,13 @@ const roundTo = (v, digits) => Math.round(v * 10 ** digits) / 10 ** digits;
 
 // ── Snapshot ──────────────────────────────────────────────────────────────────
 
-/** Engine state → the sensor/system/twin nodes the dashboard reads. */
-export function toSnapshot(sim, config, now) {
+/**
+ * Engine state -> the sensor/system/twin nodes the dashboard reads.
+ * @param {number|null} pumpStartedAt  ms epoch the current pump run began (from the bridge's
+ *   session tracker); included only while the pump is on, so the dashboard can show a real
+ *   elapsed runtime instead of guessing from when its own page happened to load.
+ */
+export function toSnapshot(sim, config, now, pumpStartedAt = null) {
   return {
     sensors: {
       flow1: sim.flows.f1,
@@ -49,6 +56,7 @@ export function toSnapshot(sim, config, now) {
       source: DATA_SOURCE,
       online: true,
       leakSegments: sim.leakSegments.length > 0 ? sim.leakSegments.join(',') : null, // null deletes it
+      pumpStartedAt: sim.pumpOn ? pumpStartedAt : null, // null deletes it - no stale value once the pump stops
     },
     twin: {
       valves: { A: sim.valves.A, B: sim.valves.B },
@@ -90,6 +98,20 @@ export function eventToAlert(event, timestamp) {
     timestamp,
     source: DATA_SOURCE,
   };
+}
+
+/**
+ * Alert recorded when the twin starts or stops publishing to the dashboard, so the change
+ * is visible in the dashboard's alert list and pumping-history event log, not just in a banner.
+ * @param {'connected'|'disconnected'} kind
+ * @param {string} [email]  who connected, if known
+ */
+export function connectionAlert(kind, email, timestamp) {
+  const who = email ? ` by ${email}` : '';
+  const message = kind === 'connected'
+    ? `Digital twin connected${who}. This dashboard is now showing simulated data.`
+    : `Digital twin disconnected${who}. Data will stop updating until it reconnects.`;
+  return { time: fmtTime(timestamp), severity: 'info', message, timestamp, source: DATA_SOURCE };
 }
 
 /** Seconds → "20m 0s" (or "1h 5m 0s"), the format the pump-history page shows. */

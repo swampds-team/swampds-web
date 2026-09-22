@@ -72,9 +72,12 @@ onValue(ref(db, '/'), (snap) => {
   const backendStatus = val.status || {};
   const backendSystem = val.system || {};
   const mappedStatus = {
-    systemStatus: backendSystem.status?.toLowerCase() ?? initialData.status.systemStatus,
-    pumpStatus:   backendSystem.pumpState?.toLowerCase() ?? initialData.status.pumpStatus,
-    controlMode:  backendStatus.controlMode?.toLowerCase() ?? initialData.status.controlMode,
+    systemStatus:  backendSystem.status?.toLowerCase() ?? initialData.status.systemStatus,
+    pumpStatus:    backendSystem.pumpState?.toLowerCase() ?? initialData.status.pumpStatus,
+    controlMode:   backendStatus.controlMode?.toLowerCase() ?? initialData.status.controlMode,
+    // ms epoch the current pump run began, so "Current Runtime" reflects the real elapsed time
+    // instead of counting from whenever this page happened to load. Null while the pump is off.
+    pumpStartedAt: backendSystem.pumpStartedAt ?? null,
   };
 
   const beat = val.sensors?.lastUpdated ?? null;
