@@ -92,7 +92,7 @@ export default function ReportModal({ open, onClose, sim, config, startedAt }) {
                 <tr>
                   <td className="p-2.5 font-semibold">Sensor F1</td>
                   <td className="p-2.5">{sim.flows.f1.toFixed(2)}</td>
-                  <td className="p-2.5">—</td>
+                  <td className="p-2.5">-</td>
                   <td className="p-2.5 text-emerald-600">Reference</td>
                 </tr>
                 <tr>

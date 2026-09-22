@@ -1,21 +1,17 @@
 /**
  * @fileoverview Digital-twin simulation engine (pure, no React, no Firebase).
  *
- * Models: SOURCE TANK → PUMP → F1 → VALVE A → F2 → VALVE B → F3 → DELIVERY TANK
+ * Pipeline: SOURCE TANK -> PUMP -> F1 -> VALVE A -> F2 -> VALVE B -> F3 -> DELIVERY TANK.
+ * Flow is conserved: a leak at a valve reduces every sensor downstream of it
+ * (F3 = F1 - leakA - leakB), not just the next one.
  *
- * Every function takes a state and returns a NEW state, so it is easy to test
- * and safe to drive from a React state updater. Randomness is injected (`rng`)
+ * Detection is compare-and-persist: each segment compares its two neighbouring
+ * sensors (% difference). A difference above tolerance starts a timer (status
+ * "warning"); it lasting `persistSec` declares a leak, which latches - the pump
+ * cuts off and the alarm stays on until the operator resets it with both valves closed.
+ *
+ * Every function takes a state and returns a new one. Randomness is injected (`rng`)
  * so tests are deterministic.
- *
- * Flow is conserved: a leak at a valve removes water from every sensor
- * downstream of it (F3 = F1 - leakA - leakB), not just the next one.
- *
- * Detection is compare-and-persist:
- *   - each segment compares its two neighbouring sensors (% difference)
- *   - a difference above tolerance starts a timer            → status "warning"
- *   - the difference lasting `persistSec` declares a LEAK    → status "leak"
- *   - a confirmed leak latches: the pump is cut off and the alarm stays on
- *     until the operator resets it with both valves closed
  */
 
 import { DEFAULT_CONFIG } from './config.js';
@@ -26,7 +22,7 @@ const MAX_EVENTS = 200;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const round2 = (v) => Math.round(v * 100) / 100;
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// State
 
 const emptySegment = () => ({ diffPct: 0, abnormalFor: 0, leak: false });
 
@@ -60,7 +56,7 @@ function addEvent(state, severity, source, message) {
   return { ...state, seq, events: [event, ...state.events].slice(0, MAX_EVENTS) };
 }
 
-// ── Simulation step ───────────────────────────────────────────────────────────
+// Simulation step
 
 /**
  * Advance the simulation by `dt` seconds.
@@ -204,7 +200,7 @@ function runDetection(s, config, dt) {
 
 const SEG_TEXT = { A: 'F1 → F2', B: 'F2 → F3' };
 
-// ── Operator actions ──────────────────────────────────────────────────────────
+// Operator actions
 
 /** Set a leak valve's opening (0-100 %). Only opening/closing is logged, not every slider tick. */
 export function setValve(state, id, percent) {

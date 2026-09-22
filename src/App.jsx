@@ -37,10 +37,10 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* ── Public, no Firebase: digital twin simulation ── */}
+          {/* Public, no Firebase: digital twin simulation */}
           <Route path="/twin" element={<TwinPage />} />
 
-          {/* ── Everything below needs Firebase auth ── */}
+          {/* Everything below needs Firebase auth */}
           <Route element={<AuthShell />}>
             <Route path="/login" element={<Login />} />
 
