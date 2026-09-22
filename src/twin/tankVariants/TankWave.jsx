@@ -32,14 +32,17 @@ export function TankWaveFragment({ percent, w = 96, h = 140 }) {
 
       <g clipPath={`url(#${id}-body)`}>
         <g style={{ transform: `translateY(${fillY}px)`, transition: 'transform 1s ease' }}>
-          {/* two waves, offset in phase and speed, tile horizontally via a repeated path */}
+          {/* Two waves, offset in phase and speed, tiled horizontally by repeating the same
+              curve every `w` px. Each drifts by exactly one tile width (--wave-w), in pixels,
+              not a %: a % resolves against this path's bounding box (~3w wide here), which
+              isn't a whole number of tiles, so the loop would visibly jump on every repeat. */}
           <path
             d={`M -${w} 6 Q -${w * 0.75} 0 -${w * 0.5} 6 T 0 6 T ${w * 0.5} 6 T ${w} 6 T ${w * 1.5} 6 T ${w * 2} 6 V ${h * 2} H -${w} Z`}
-            fill="#7dd3fc" opacity="0.55" className="tw-wave-a"
+            fill="#7dd3fc" opacity="0.55" className="tw-wave-a" style={{ '--wave-w': `${w}px` }}
           />
           <path
             d={`M -${w} 9 Q -${w * 0.75} 15 -${w * 0.5} 9 T 0 9 T ${w * 0.5} 9 T ${w} 9 T ${w * 1.5} 9 T ${w * 2} 9 V ${h * 2} H -${w} Z`}
-            fill={`url(#${id}-fill)`} className="tw-wave-b"
+            fill={`url(#${id}-fill)`} className="tw-wave-b" style={{ '--wave-w': `${w}px` }}
           />
         </g>
       </g>

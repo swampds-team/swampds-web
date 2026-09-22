@@ -23,6 +23,11 @@ export function TankBubblesFragment({ percent, active = true, w = 96, h = 140 })
   return (
     <>
       <defs>
+        {/* Matches the body outline exactly (same rx), so the fill and bubbles can never
+            paint outside the border - independent of how rx gets clamped at small sizes. */}
+        <clipPath id={`${id}-body`}>
+          <rect x="2" y="2" width={w - 4} height={h - 4} rx="14" />
+        </clipPath>
         <clipPath id={`${id}-fill-clip`}>
           <rect x="2" y={fillY} width={w - 4} height={fillH} rx="6" style={{ transition: 'y 1s ease, height 1s ease' }} />
         </clipPath>
@@ -35,14 +40,16 @@ export function TankBubblesFragment({ percent, active = true, w = 96, h = 140 })
       <rect x="2" y="2" width={w - 4} height={h - 4} rx="14"
         className="fill-white dark:fill-slate-900 stroke-slate-300 dark:stroke-slate-700" strokeWidth="2" />
 
-      <rect x="2" y={fillY} width={w - 4} height={fillH} rx="6"
-        fill={`url(#${id}-fill)`} style={{ transition: 'y 1s ease, height 1s ease' }} />
+      <g clipPath={`url(#${id}-body)`}>
+        <rect x="2" y={fillY} width={w - 4} height={fillH} rx="6"
+          fill={`url(#${id}-fill)`} style={{ transition: 'y 1s ease, height 1s ease' }} />
 
-      <g clipPath={`url(#${id}-fill-clip)`}>
-        {active && bubbles.map((b, i) => (
-          <circle key={i} cx={b.x} cy={h - 4} r={b.r} fill="white" opacity="0.6"
-            className="tb-bubble" style={{ animationDelay: `${b.delay}s`, animationDuration: `${b.dur}s`, ['--rise']: `${h}px` }} />
-        ))}
+        <g clipPath={`url(#${id}-fill-clip)`}>
+          {active && bubbles.map((b, i) => (
+            <circle key={i} cx={b.x} cy={h - 4} r={b.r} fill="white" opacity="0.6"
+              className="tb-bubble" style={{ animationDelay: `${b.delay}s`, animationDuration: `${b.dur}s`, ['--rise']: `${h}px` }} />
+          ))}
+        </g>
       </g>
 
       <rect x="2" y="2" width={w - 4} height={h - 4} rx="14" fill="none"
