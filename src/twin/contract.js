@@ -31,7 +31,7 @@ const STATUS_TEXT = { normal: 'NORMAL', warning: 'WARNING', leak: 'LEAK' };
 
 const roundTo = (v, digits) => Math.round(v * 10 ** digits) / 10 ** digits;
 
-// ── Snapshot ──────────────────────────────────────────────────────────────────
+// Snapshot
 
 /**
  * Engine state -> the sensor/system/twin nodes the dashboard reads.
@@ -76,7 +76,7 @@ export function flatten(obj, prefix = '', out = {}) {
   return out;
 }
 
-// ── Alerts & pump history ─────────────────────────────────────────────────────
+// Alerts & pump history
 
 /** Warnings, alarms and system messages go to the dashboard; operator clicks on the twin do not. */
 export function shouldPublishEvent(event) {
@@ -147,7 +147,7 @@ export function trackPump(tracker, pumpOn, now) {
   return { tracker, session: null };
 }
 
-// ── Commands from the dashboard ───────────────────────────────────────────────
+// Commands from the dashboard
 
 const norm = (v) => (typeof v === 'string' ? v.toLowerCase() : null);
 
@@ -171,7 +171,7 @@ export function controlIntents(sim, remote) {
   return intents;
 }
 
-// ── Single-publisher lock ─────────────────────────────────────────────────────
+// Single-publisher lock
 
 /** May this client take the lock? Free, already ours, stale, or forced. */
 export function canAcquireLock(current, { now, clientId, force = false }) {
@@ -181,7 +181,7 @@ export function canAcquireLock(current, { now, clientId, force = false }) {
   return now - (current.heartbeat ?? 0) > LOCK_TTL_MS;
 }
 
-// ── Dashboard side ────────────────────────────────────────────────────────────
+// Dashboard side
 
 /**
  * Should the operator dashboard warn about where its data comes from?

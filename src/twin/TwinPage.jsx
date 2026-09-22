@@ -114,7 +114,7 @@ export default function TwinPage() {
 
   return (
     <div className={`twin-app ${darkMode ? 'dark' : ''} min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-150`}>
-      {/* ── Modern Minimalist Navigation Bar ── */}
+      {/* Modern Minimalist Navigation Bar */}
       <header className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Logo & Status */}
@@ -210,7 +210,7 @@ export default function TwinPage() {
         </div>
       </header>
 
-      {/* ── Main Layout Workspace ── */}
+      {/* Main Layout Workspace */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
         <LiveStrip sim={sim} />
         <p className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] sm:text-xs text-amber-800 dark:text-amber-300">
@@ -246,7 +246,7 @@ export default function TwinPage() {
           </div>
         )}
 
-        {/* ── Vector Pipeline Schematic ── */}
+        {/* Vector Pipeline Schematic */}
         <Card className="p-3 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <CardHeader
             title="Pipeline Architecture"
@@ -264,7 +264,7 @@ export default function TwinPage() {
           />
         </Card>
 
-        {/* ── Balanced Two-Column Layout ── */}
+        {/* Balanced Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Left Column: Controls & Diagnostics (5 cols) */}
           <div className="lg:col-span-5 space-y-5">
@@ -286,7 +286,7 @@ export default function TwinPage() {
         </div>
       </main>
 
-      {/* ── Report Modal ── */}
+      {/* Report Modal */}
       <BridgeModal open={linkOpen} onClose={() => setLinkOpen(false)} bridge={bridge} />
 
       <ReportModal

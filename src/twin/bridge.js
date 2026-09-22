@@ -59,7 +59,7 @@ export function createBridge(deps) {
     await stop({ silent: true });
   }
 
-  // ── lifecycle ────────────────────────────────────────────────────────────────
+  // lifecycle
 
   /**
    * Take the lock and start publishing.
@@ -148,7 +148,7 @@ export function createBridge(deps) {
     if (!silent) status('off');
   }
 
-  // ── publishing ───────────────────────────────────────────────────────────────
+  // publishing
 
   async function publish() {
     if (!running || publishing) return;
