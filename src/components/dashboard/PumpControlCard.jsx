@@ -1,5 +1,5 @@
 import React from 'react';
-import { Power, Settings2, Radio } from 'lucide-react';
+import { Power, Settings2, Radio, Eye } from 'lucide-react';
 import { Card, CardHeader } from '../Card';
 
 /**
@@ -8,9 +8,11 @@ import { Card, CardHeader } from '../Card';
  *   controlMode: 'auto'|'manual',
  *   onToggleMode: () => void,
  *   onPumpCommand: (cmd: 'on'|'off') => void,
+ *   readOnly?: boolean,   viewer accounts on the operator dashboard: buttons render disabled.
+ *                         Not used by the twin's own copy of this card, which stays fully live.
  * }} props
  */
-export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode, onPumpCommand }) {
+export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode, onPumpCommand, readOnly = false }) {
   const isManual = controlMode === 'manual';
   const isOn = pumpStatus === 'on';
 
@@ -20,6 +22,11 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
         title="Pump Status"
         icon={Power}
         iconColorClass={isOn ? 'text-green-500' : 'text-slate-400'}
+        action={readOnly && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
+            <Eye className="w-3 h-3" /> View only
+          </span>
+        )}
       />
 
       <div className="flex-1 flex flex-col justify-between">
@@ -36,10 +43,14 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
 
           <button
             onClick={onToggleMode}
+            disabled={readOnly}
+            title={readOnly ? 'View-only account: ask an admin to change this' : undefined}
             className={`flex items-center gap-1 px-3 py-2 min-h-[40px] rounded-full text-xs font-bold border transition-colors ${
-              isManual
-                ? 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 dark:bg-orange-500/10 dark:border-orange-500/30 dark:text-orange-300 dark:hover:bg-orange-500/20'
-                : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/20'
+              readOnly
+                ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-500'
+                : isManual
+                  ? 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 dark:bg-orange-500/10 dark:border-orange-500/30 dark:text-orange-300 dark:hover:bg-orange-500/20'
+                  : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/20'
             }`}
           >
             {isManual ? <Radio className="w-3 h-3" /> : <Settings2 className="w-3 h-3" />}
@@ -55,9 +66,10 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
           <div className="flex gap-2">
             <button
               onClick={() => onPumpCommand('on')}
-              disabled={!isManual || isOn}
+              disabled={readOnly || !isManual || isOn}
+              title={readOnly ? 'View-only account: ask an admin to change this' : undefined}
               className={`flex-1 py-3 min-h-[44px] rounded-lg font-bold text-sm transition-colors ${
-                !isManual || isOn
+                readOnly || !isManual || isOn
                   ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed'
                   : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/15 dark:text-green-300 dark:hover:bg-green-500/25'
               }`}
@@ -66,9 +78,10 @@ export default function PumpControlCard({ pumpStatus, controlMode, onToggleMode,
             </button>
             <button
               onClick={() => onPumpCommand('off')}
-              disabled={!isManual || !isOn}
+              disabled={readOnly || !isManual || !isOn}
+              title={readOnly ? 'View-only account: ask an admin to change this' : undefined}
               className={`flex-1 py-3 min-h-[44px] rounded-lg font-bold text-sm transition-colors ${
-                !isManual || !isOn
+                readOnly || !isManual || !isOn
                   ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed'
                   : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/15 dark:text-red-300 dark:hover:bg-red-500/25'
               }`}

@@ -1,24 +1,42 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Droplets, LogOut, X } from 'lucide-react';
+import { Droplets, LogOut, X, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 
-const SidebarItem = ({ to, icon: Icon, label, onClick }) => (
-  <NavLink
-    to={to}
+/** Opens in a new tab, so the dashboard stays open behind it (this is a separate public page, not an in-app route). */
+const ExternalSidebarItem = ({ to, icon: Icon, label, onClick }) => (
+  <a
+    href={to}
+    target="_blank"
+    rel="noopener noreferrer"
     onClick={onClick}
-    className={({ isActive }) =>
-      `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors min-h-[44px] ${
-        isActive
-          ? 'bg-blue-600 text-white'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-      }`
-    }
+    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors min-h-[44px] text-slate-400 hover:bg-slate-800 hover:text-white"
   >
     <Icon className="w-5 h-5 flex-shrink-0" />
-    <span className="font-medium">{label}</span>
-  </NavLink>
+    <span className="font-medium flex-1">{label}</span>
+    <ExternalLink className="w-3.5 h-3.5 opacity-50 flex-shrink-0" aria-hidden="true" />
+  </a>
 );
+
+const SidebarItem = ({ to, icon: Icon, label, onClick, external }) => {
+  if (external) return <ExternalSidebarItem to={to} icon={Icon} label={label} onClick={onClick} />;
+  return (
+    <NavLink
+      to={to}
+      onClick={onClick}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors min-h-[44px] ${
+          isActive
+            ? 'bg-blue-600 text-white'
+            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        }`
+      }
+    >
+      <Icon className="w-5 h-5 flex-shrink-0" />
+      <span className="font-medium">{label}</span>
+    </NavLink>
+  );
+};
 
 /** Derive two-letter initials from an email address. */
 const getInitials = (email) => {
@@ -37,7 +55,7 @@ const getInitials = (email) => {
  * }} props
  */
 export default function Sidebar({ navItems, isOpen = false, onClose }) {
-  const { user, logout } = useAuth();
+  const { user, role, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -102,7 +120,14 @@ export default function Sidebar({ navItems, isOpen = false, onClose }) {
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate capitalize">{displayName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold text-white truncate capitalize">{displayName}</p>
+                <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                  role === 'admin' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700 text-slate-300'
+                }`}>
+                  {role === 'admin' ? 'Admin' : 'View only'}
+                </span>
+              </div>
               <p className="text-xs text-slate-400 truncate">{displaySub}</p>
             </div>
             <button

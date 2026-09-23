@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSwampdsData, useChartHistory, sendPumpCommand, setControlMode } from '../data/swampdsData';
+import { useAuth } from '../auth/AuthContext';
 
 import SystemStatusBanner  from '../components/dashboard/SystemStatusBanner';
 import WaterLevelCard      from '../components/dashboard/WaterLevelCard';
@@ -18,6 +19,7 @@ const FLOW_SENSORS = [
 export default function Dashboard() {
   const { sensors, status, alerts } = useSwampdsData();
   const { flowData, waterLevelData } = useChartHistory();
+  const { canEdit } = useAuth();
 
   const handlePumpCommand = (cmd) => sendPumpCommand(cmd);
   const handleToggleMode  = () => setControlMode(status.controlMode === 'auto' ? 'manual' : 'auto');
@@ -42,6 +44,7 @@ export default function Dashboard() {
             controlMode={status.controlMode}
             onToggleMode={handleToggleMode}
             onPumpCommand={handlePumpCommand}
+            readOnly={!canEdit}
           />
         </div>
       </div>
