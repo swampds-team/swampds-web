@@ -102,10 +102,12 @@ onValue(ref(db, '/'), (snap) => {
 
 const HISTORY_KEY        = 'swampds.history.v1';
 const HISTORY_WINDOW_MS  = 24 * 60 * 60 * 1000;
-const SAMPLE_INTERVAL_MS = 30 * 1000;
+const SAMPLE_INTERVAL_MS = 5 * 1000; // 24h of history at this rate is ~17k points/line, still cheap to store and chart
 
+// Includes seconds: below a 60s sample interval, several points in a row would otherwise
+// carry the identical "HH:MM" label, which reads as duplicate/simultaneous readings.
 const _timeLabel = (ts) =>
-  new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 const _deriveCharts = (samples) => ({
   flowData:       samples.map(s => ({ time: _timeLabel(s.ts), F1: s.f1, F2: s.f2, F3: s.f3 })),
