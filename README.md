@@ -75,9 +75,35 @@ VITE_FIREBASE_APP_ID=
 - `src/twin/*.jsx`: the `/twin` page
 - `src/data/swampdsData.js`: the dashboard's data layer
 
+## Roles: admin vs. view-only
+
+Every signed-in account can see the dashboard. Only accounts with `roles/<uid>` set to
+`"admin"` in the Realtime Database can control the pump or connect the Digital Twin to it;
+everyone else is treated as view-only, including any account with no `roles` entry at all.
+
+To make someone an admin:
+1. Firebase console → **Authentication → Users** → copy their UID.
+2. **Realtime Database → Data** → add `roles/<their UID>` with the value `admin` (a string).
+
+Leave an account out of `roles`, or set it to anything other than `"admin"`, to keep it
+view-only.
+
 ## Firebase setup checklist
 
-- Realtime Database rules: reads may be public, but writes should require `auth != null`.
+- Realtime Database rules: reads may be public, but every write needs the signed-in
+  account's `roles/<uid>` to be `"admin"` - `auth != null` alone is not enough once
+  roles are in use. `roles` itself is never writable from the client:
+  ```json
+  {
+    "rules": {
+      ".read": true,
+      "roles": { ".write": false },
+      ".write": "auth != null && root.child('roles').child(auth.uid).val() === 'admin'"
+    }
+  }
+  ```
+  Add a `roles/<uid>: "admin"` entry for every existing account before applying this -
+  otherwise every account loses write access until you do.
 - Authentication → Settings → User actions: turn off **Enable create (sign-up)**; accounts are created manually in the console.
 - Authentication → Sign-in method: keep **Anonymous** disabled (it would satisfy `auth != null`).
 

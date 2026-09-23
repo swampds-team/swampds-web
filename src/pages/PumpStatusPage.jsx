@@ -3,6 +3,7 @@ import { Power, Clock, Activity } from 'lucide-react';
 import { Card, CardHeader } from '../components/Card';
 import PumpControlCard from '../components/dashboard/PumpControlCard';
 import { useSwampdsData, sendPumpCommand, setControlMode } from '../data/swampdsData';
+import { useAuth } from '../auth/AuthContext';
 
 function formatRuntime(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -18,6 +19,7 @@ const isPumpAlert = (msg) => PUMP_KEYWORDS.some(kw => msg.toLowerCase().includes
 
 export default function PumpStatusPage() {
   const { status, alerts } = useSwampdsData();
+  const { canEdit } = useAuth();
 
   // Ticks once a second while the pump is on, purely to re-render the elapsed-time calculation
   // below - it never accumulates its own count, so it can't drift from what the backend reports.
@@ -45,6 +47,7 @@ export default function PumpStatusPage() {
             controlMode={status.controlMode}
             onToggleMode={() => setControlMode(status.controlMode === 'auto' ? 'manual' : 'auto')}
             onPumpCommand={sendPumpCommand}
+            readOnly={!canEdit}
           />
         </div>
 

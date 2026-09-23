@@ -10,14 +10,19 @@ async function loadFirebase() {
     import('../firebase/firebaseConfig'),
     import('firebase/database'),
   ]);
-  const { ref, update, push, remove, onValue, runTransaction, onDisconnect } = database;
+  const { ref, update, push, remove, onValue, runTransaction, onDisconnect, get } = database;
+  const db = database.getDatabase(config.app);
   return {
     auth: config.auth,
     loginWithEmail: config.loginWithEmail,
-    db: database.getDatabase(config.app),
+    db,
+    ref,
+    get,
     api: { ref, update, push, remove, onValue, runTransaction, onDisconnect },
   };
 }
+
+const NOT_ADMIN_MESSAGE = 'This account is view-only and cannot connect the Digital Twin. Ask an admin to grant edit access.';
 
 /**
  * Links the running twin to Firebase so the operator dashboard can show it and control it.
@@ -49,6 +54,15 @@ export function useFirebaseBridge({ sim, config, actions }) {
 
   const begin = useCallback(async (user) => {
     const fb = fbRef.current;
+
+    // Database rules restrict every write to admin accounts, so this would fail anyway -
+    // check first and say why in plain terms, instead of surfacing a raw permission error.
+    const roleSnap = await fb.get(fb.ref(fb.db, `roles/${user.uid}`));
+    if (roleSnap.val() !== 'admin') {
+      setStatus({ state: 'error', message: NOT_ADMIN_MESSAGE });
+      return;
+    }
+
     bridgeRef.current = createBridge({
       api: fb.api,
       db: fb.db,
